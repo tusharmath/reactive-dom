@@ -1,0 +1,14 @@
+{
+  "name": "observable-dom",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tushar Mathur <tusharmath@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "observable-air": "^10.2.1"
+  }
+}
