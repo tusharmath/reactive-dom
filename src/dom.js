@@ -14,6 +14,7 @@ class DOMParentContainer {
     this.sink = sink
     this.contentMap = {}
     this.disposables = []
+    this.props = props
     sh.asap(() => {
       this.root = createELM(type)
       this.sink.next(this.root)
@@ -22,7 +23,7 @@ class DOMParentContainer {
   }
 
   attachEventListeners() {
-    for (let event in props.on) {
+    for (let event in this.props.on) {
       const listener = props.on[event]
       this.root.addEventListener(event, listener)
       this.disposables.push(() =>
@@ -116,7 +117,17 @@ const Lazy = value =>
     ob.next(value)
   })
 
-export const h = (type, props, children$) => {
+export const h = (...t) => {
+  let [type, props, children$] = t
+  if (t.length === 2 && Array.isArray(props)) {
+    children$ = props
+    props = {}
+  } else if (t.length === 2 && !Array.isArray(props)) {
+    children$ = []
+  }
+
+  console.log({ type, props, children$ })
+
   return new DOMObservable(
     type,
     props,
