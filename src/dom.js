@@ -1,15 +1,38 @@
-const createELM = type => document.createElement(type)
+const createELM = sel => {
+  const [type, ...css] = sel.split('.')
+  const el = document.createElement(type)
+  css.forEach(i => el.classList.add(i))
+  return el
+}
 const toNode = node =>
   typeof node === 'string' || typeof node === 'number'
     ? new Text(node.toString())
     : node
 
 class DOMParentContainer {
-  constructor(type, sink, sh) {
+  constructor(type, props, sink, sh) {
     this.sink = sink
-    this.root = createELM(type)
     this.contentMap = {}
-    sh.asap(() => this.sink.next(this.root))
+    this.disposables = []
+    sh.asap(() => {
+      this.root = createELM(type)
+      this.sink.next(this.root)
+      this.attachEventListeners()
+    })
+  }
+
+  attachEventListeners() {
+    for (let event in props.on) {
+      const listener = props.on[event]
+      this.root.addEventListener(event, listener)
+      this.disposables.push(() =>
+        this.root.removeEventListener(event, listener)
+      )
+    }
+  }
+
+  removeEventListeners() {
+    this.disposables.forEach(i => i())
   }
 
   getKeys() {
@@ -65,17 +88,26 @@ class DOMChildObserver {
 }
 
 class DOMObservable {
-  constructor(type, children$) {
+  constructor(type, props, children$) {
     this.type = type
     this.children$ = children$
+    this.props = props
   }
 
   subscribe(observer, scheduler) {
-    const parent = new DOMParentContainer(this.type, observer, scheduler)
+    const parent = new DOMParentContainer(
+      this.type,
+      this.props,
+      observer,
+      scheduler
+    )
     const subs = this.children$.map((child, i) =>
       child.subscribe(new DOMChildObserver(parent, i, observer), scheduler)
     )
-    return () => subs.forEach(i => i())
+    return () => {
+      subs.forEach(i => i())
+      parent.removeEventListeners()
+    }
   }
 }
 
@@ -84,9 +116,10 @@ const Lazy = value =>
     ob.next(value)
   })
 
-export const h = (type, children$) => {
+export const h = (type, props, children$) => {
   return new DOMObservable(
     type,
+    props,
     children$.map(i => (typeof i === 'string' ? Lazy(i) : i))
   )
 }
