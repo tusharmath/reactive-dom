@@ -3,6 +3,7 @@ body {
   margin: 0;
   padding: 0;
   height: 100%;
+  font-size: 0.8em;
 }
 
 .element {
@@ -21,9 +22,14 @@ body {
   height: 32.5px;
   border-radius: 16.25px;
   will-change: transform;
+  transition: all 100ms linear;
   contain: strict;
 }
 
 * {
   box-sizing: border-box;
+}
+
+.box {
+  height: 40px;
 }

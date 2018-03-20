@@ -2,6 +2,7 @@ import { h } from './dom.js'
 
 const seconds = R.compose(
   O.multicast,
+  // O.slice(0, 5),
   O.scan(i => (i === 9 ? 0 : i + 1), 0),
   O.interval
 )
@@ -19,20 +20,20 @@ const translate = R.compose(
 
 const translate$ = translate()
 
-const transform = cnt => i => ({
-  transform: `translateX(${cnt * i * 100}px)`
+const transform = (col, row) => i => ({
+  transform: `translateX(${col * i * 30}px)`
 })
 const timer$ = seconds(1000)
-const Dot = cnt => {
-  const style = O.map(transform(cnt), translate$)
-  return h('div.element', { style }, [timer$])
+const Dot = row => col => {
+  const style$ = O.map(transform(col, row), translate$)
+  return h('div.element', { style$ }, [timer$])
 }
 
-const Triangle = () => {
-  return h('div.triangle', R.times(Dot, 10))
+const Box = row => {
+  return h('div.box', R.times(Dot(row), 10))
 }
 
-const view = e => h('div', [Triangle()])
+const view = e => h('div', R.times(Box, 15))
 
 const emitter = hoe.create(console.log)
 

@@ -111,34 +111,39 @@ class DOMObservable {
   }
 
   subscribe(observer, scheduler) {
-    const subscriptions = []
-    const parent = new DOMParentContainer(
-      this.type,
-      this.props,
-      observer,
-      scheduler
-    )
-
-    if (this.props.style) {
-      subscriptions.push(
-        this.props.style.subscribe(
-          {
-            next: val => parent.updateStyle(val),
-            error: err => observer.error(err),
-            complete: () => {}
-          },
+    const subscriptions = [
+      scheduler.asap(() => {
+        const parent = new DOMParentContainer(
+          this.type,
+          this.props,
+          observer,
           scheduler
         )
-      )
-    }
+        if (this.props.style) parent.updateStyle(this.props.style)
+        if (this.props.style$)
+          subscriptions.push(
+            this.props.style$.subscribe(
+              {
+                next: val => parent.updateStyle(val),
+                error: err => observer.error(err),
+                complete: () => {}
+              },
+              scheduler
+            )
+          )
 
-    subscriptions.push(
-      ...this.children$.map((child, i) =>
-        child.subscribe(new DOMChildObserver(parent, i, observer), scheduler)
-      )
-    )
+        subscriptions.push(
+          ...this.children$.map((child, i) =>
+            child.subscribe(
+              new DOMChildObserver(parent, i, observer),
+              scheduler
+            )
+          )
+        )
 
-    observer.next(parent.root)
+        observer.next(parent.root)
+      })
+    ]
 
     const unsubscribe = () => {
       subscriptions.forEach(i => i.unsubscribe())
