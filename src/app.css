@@ -1,0 +1,29 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.element {
+  position: absolute;
+  background: #61dafb;
+  font-style: normal;
+  font-variant: normal;
+  font-weight: normal;
+  font-stretch: normal;
+  font-size: 15px;
+  line-height: 32.5px;
+  font-family: sans-serif;
+  text-align: center;
+  cursor: pointer;
+  width: 32.5px;
+  height: 32.5px;
+  border-radius: 16.25px;
+  will-change: transform;
+  contain: strict;
+}
+
+* {
+  box-sizing: border-box;
+}
