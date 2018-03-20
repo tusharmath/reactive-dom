@@ -4,22 +4,19 @@ const createELM = sel => {
   css.forEach(i => el.classList.add(i))
   return el
 }
+const isNode = i => i instanceof Node
 const toNode = node =>
   typeof node === 'string' || typeof node === 'number'
     ? new Text(node.toString())
     : node
 
 class DOMParentContainer {
-  constructor(type, props, sink, sh) {
-    this.sink = sink
+  constructor(type, props, sh) {
     this.contentMap = {}
     this.disposables = []
     this.props = props
-    sh.asap(() => {
-      this.root = createELM(type)
-      this.sink.next(this.root)
-      this.attachEventListeners()
-    })
+    this.root = createELM(type)
+    this.attachEventListeners()
   }
 
   attachEventListeners() {
@@ -62,6 +59,18 @@ class DOMParentContainer {
     node.parentNode.removeChild(node)
     delete this.contentMap[id]
   }
+
+  updateStyle(style) {
+    for (let i in style) {
+      if (this.root.style[i] !== style[i]) {
+        this.root.style[i] = style[i]
+      }
+    }
+  }
+
+  setTextContent(text) {
+    this.root.textContent = text
+  }
 }
 
 class DOMChildObserver {
@@ -71,12 +80,14 @@ class DOMChildObserver {
     this.sink = sink
   }
   next(node) {
-    if (this.node === node) {
-      return
+    if (this.node === node) return
+    if (isNode(node)) {
+      if (this.node) this.parent.removeAt(this.id)
+      this.parent.insertAt(this.id, toNode(node))
+    } else {
+      this.parent.setTextContent(node)
     }
-    if (this.node) this.parent.removeAt(this.id)
     this.node = node
-    this.parent.insertAt(this.id, toNode(this.node))
   }
 
   error(err) {
@@ -84,7 +95,11 @@ class DOMChildObserver {
   }
 
   complete() {
-    this.parent.removeAt(this.id)
+    if (isNode(this.node)) {
+      this.parent.removeAt(this.id)
+    } else {
+      this.parent.setTextContent('')
+    }
   }
 }
 
@@ -96,19 +111,40 @@ class DOMObservable {
   }
 
   subscribe(observer, scheduler) {
+    const subscriptions = []
     const parent = new DOMParentContainer(
       this.type,
       this.props,
       observer,
       scheduler
     )
-    const subs = this.children$.map((child, i) =>
-      child.subscribe(new DOMChildObserver(parent, i, observer), scheduler)
+
+    if (this.props.style) {
+      subscriptions.push(
+        this.props.style.subscribe(
+          {
+            next: val => parent.updateStyle(val),
+            error: err => observer.error(err),
+            complete: () => {}
+          },
+          scheduler
+        )
+      )
+    }
+
+    subscriptions.push(
+      ...this.children$.map((child, i) =>
+        child.subscribe(new DOMChildObserver(parent, i, observer), scheduler)
+      )
     )
-    return () => {
-      subs.forEach(i => i())
+
+    observer.next(parent.root)
+
+    const unsubscribe = () => {
+      subscriptions.forEach(i => i.unsubscribe())
       parent.removeEventListeners()
     }
+    return { unsubscribe }
   }
 }
 
@@ -125,8 +161,6 @@ export const h = (...t) => {
   } else if (t.length === 2 && !Array.isArray(props)) {
     children$ = []
   }
-
-  console.log({ type, props, children$ })
 
   return new DOMObservable(
     type,
