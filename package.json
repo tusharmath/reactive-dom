@@ -9,6 +9,11 @@
   "author": "Tushar Mathur <tusharmath@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "observable-air": "^10.2.1"
+    "hoe": "^6.1.0",
+    "observable-air": "^11.1.0",
+    "ramda": "^0.25.0"
+  },
+  "devDependencies": {
+    "prettier": "^1.11.1"
   }
 }

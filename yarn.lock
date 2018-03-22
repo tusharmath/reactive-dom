@@ -2,6 +2,18 @@
 # yarn lockfile v1
 
 
-observable-air@^10.2.1:
-  version "10.2.1"
-  resolved "https://registry.yarnpkg.com/observable-air/-/observable-air-10.2.1.tgz#0d147e548d3ab46483f63a5be86b0ba9fe079bf1"
+hoe@^6.1.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/hoe/-/hoe-6.1.0.tgz#df782bbad52ce497ffe3c70521ae197076b473e9"
+
+observable-air@^11.1.0:
+  version "11.1.0"
+  resolved "https://registry.yarnpkg.com/observable-air/-/observable-air-11.1.0.tgz#ba2e5a6bda5493aa81db2916d3aea2f3535b892d"
+
+prettier@^1.11.1:
+  version "1.11.1"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.11.1.tgz#61e43fc4cd44e68f2b0dfc2c38cd4bb0fccdcc75"
+
+ramda@^0.25.0:
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/ramda/-/ramda-0.25.0.tgz#8fdf68231cffa90bc2f9460390a0cb74a29b29a9"

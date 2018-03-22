@@ -1,3 +1,6 @@
+import * as O from 'observable-air'
+import * as R from 'ramda'
+
 const createELM = sel => {
   const [type, ...css] = sel.split('.')
   const el = document.createElement(type)
@@ -10,8 +13,35 @@ const toNode = node =>
     ? new Text(node.toString())
     : node
 
+class IdleObservable {
+  subscribe(observer) {
+    let _closed = false
+    let id = 0
+
+    const schedule = () => (id = requestIdleCallback(onEvent))
+
+    const onEvent = obj => {
+      observer.next(obj)
+      if (!_closed) schedule()
+    }
+
+    const unsubscribe = () => {
+      cancelIdleCallback(id)
+      _closed = true
+    }
+
+    schedule()
+    return {
+      unsubscribe,
+      get closed() {
+        return _closed
+      }
+    }
+  }
+}
+
 class DOMParentContainer {
-  constructor(type, props, sh) {
+  constructor(type, props) {
     this.contentMap = {}
     this.disposables = []
     this.props = props
@@ -21,7 +51,7 @@ class DOMParentContainer {
 
   attachEventListeners() {
     for (let event in this.props.on) {
-      const listener = props.on[event]
+      const listener = this.props.on[event]
       this.root.addEventListener(event, listener)
       this.disposables.push(() =>
         this.root.removeEventListener(event, listener)
@@ -149,14 +179,9 @@ class DOMObservable {
       subscriptions.forEach(i => i.unsubscribe())
       parent.removeEventListeners()
     }
-    return { unsubscribe }
+    return {unsubscribe}
   }
 }
-
-const Lazy = value =>
-  new O.Observable(ob => {
-    ob.next(value)
-  })
 
 export const h = (...t) => {
   let [type, props, children$] = t
@@ -170,6 +195,16 @@ export const h = (...t) => {
   return new DOMObservable(
     type,
     props,
-    children$.map(i => (typeof i === 'string' ? Lazy(i) : i))
+    children$.map(i => (typeof i === 'string' ? just(i) : i))
   )
 }
+
+export const just = value =>
+  new O.Observable(ob => {
+    ob.next(value)
+  })
+
+export const oncePerFrame = $ =>
+  O.multicast(O.sample(R.identity, O.frames(), [$]))
+export const whenFree = (budget, $) =>
+  O.multicast(O.sample(R.identity, new IdleObservable(), [$]))
