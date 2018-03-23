@@ -1,15 +1,15 @@
-import {h} from './dom'
+import {h, whenFree} from './dom'
 import {scale$, timer$} from './lib'
 import {containerStyle, dotStyle} from './style'
 import * as R from 'ramda'
 import * as O from 'observable-air'
 
-const ROWS = 10
+const ROWS = 20
 const COLS = 80
 const COLOR_YELLOW = {backgroundColor: 'yellow'}
 const COLOR_DEFAULT = {backgroundColor: 'rgb(97, 218, 251)'}
 
-const Dot = row => col => {
+const Dot = (row, timer$) => col => {
   const enableBG$ = O.subject()
   const style$ = O.skipRepeats(
     R.equals,
@@ -19,8 +19,8 @@ const Dot = row => col => {
     'div',
     {
       on: {
-        mouseenter: () => enableBG$.next(true),
-        mouseleave: () => enableBG$.next(false)
+        mouseover: () => enableBG$.next(true),
+        mouseout: () => enableBG$.next(false)
       },
       style: dotStyle(row, col),
       style$
@@ -29,9 +29,14 @@ const Dot = row => col => {
   )
 }
 
-const view = () =>
-  h('div', {style$: scale$, style: containerStyle()}, [
-    h('div', R.flatten(R.times(row => R.times(Dot(row, timer$), COLS), ROWS)))
+const view = timer$ => {
+  const lazyTimer$ = whenFree(16, timer$)
+  return h('div', {style$: O.slice(0, 100, scale$), style: containerStyle()}, [
+    h(
+      'div',
+      R.flatten(R.times(row => R.times(Dot(row, lazyTimer$), COLS), ROWS))
+    )
   ])
+}
 
-O.forEach(el => document.body.appendChild(el), view())
+O.forEach(el => document.body.appendChild(el), view(timer$))

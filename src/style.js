@@ -14,7 +14,8 @@ export const dotStyle = (row, col) => ({
   height: '20px',
   borderRadius: '16.25px',
   left: `${col * 20}px`,
-  top: `${row * 20}px`
+  top: `${row * 20}px`,
+  contain: 'strict'
 })
 
 export const containerStyle = () => ({

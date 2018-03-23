@@ -13,34 +13,7 @@ const toNode = node =>
     ? new Text(node.toString())
     : node
 
-class IdleObservable {
-  subscribe(observer) {
-    let _closed = false
-    let id = 0
-
-    const schedule = () => (id = requestIdleCallback(onEvent))
-
-    const onEvent = obj => {
-      observer.next(obj)
-      if (!_closed) schedule()
-    }
-
-    const unsubscribe = () => {
-      cancelIdleCallback(id)
-      _closed = true
-    }
-
-    schedule()
-    return {
-      unsubscribe,
-      get closed() {
-        return _closed
-      }
-    }
-  }
-}
-
-class DOMParentContainer {
+class ElementContainer {
   constructor(type, props) {
     this.contentMap = {}
     this.disposables = []
@@ -133,54 +106,38 @@ class DOMChildObserver {
   }
 }
 
-class DOMObservable {
-  constructor(type, props, children$) {
-    this.type = type
-    this.children$ = children$
-    this.props = props
-  }
-
-  subscribe(observer, scheduler) {
-    const subscriptions = [
-      scheduler.asap(() => {
-        const parent = new DOMParentContainer(
-          this.type,
-          this.props,
-          observer,
-          scheduler
-        )
-        if (this.props.style) parent.updateStyle(this.props.style)
-        if (this.props.style$)
-          subscriptions.push(
-            this.props.style$.subscribe(
-              {
-                next: val => parent.updateStyle(val),
-                error: err => observer.error(err),
-                complete: () => {}
-              },
-              scheduler
-            )
-          )
-
+const domObservable = (type, props, children$) => {
+  const complete = () => {}
+  return new O.Observable((observer, scheduler) => {
+    let task = () => {
+      const element = new ElementContainer(type, props, observer, scheduler)
+      if (props.style) element.updateStyle(props.style)
+      if (props.style$)
         subscriptions.push(
-          ...this.children$.map((child, i) =>
-            child.subscribe(
-              new DOMChildObserver(parent, i, observer),
-              scheduler
-            )
+          props.style$.subscribe(
+            {
+              next: val => element.updateStyle(val),
+              error: err => observer.error(err),
+              complete: complete
+            },
+            scheduler
           )
         )
 
-        observer.next(parent.root)
-      })
-    ]
+      subscriptions.push(
+        ...children$.map((child, i) =>
+          child.subscribe(new DOMChildObserver(element, i, observer), scheduler)
+        )
+      )
 
-    const unsubscribe = () => {
+      observer.next(element.root)
+    }
+    const subscriptions = [scheduler.asap(task)]
+    return () => {
       subscriptions.forEach(i => i.unsubscribe())
       parent.removeEventListeners()
     }
-    return {unsubscribe}
-  }
+  })
 }
 
 export const h = (...t) => {
@@ -192,7 +149,7 @@ export const h = (...t) => {
     children$ = []
   }
 
-  return new DOMObservable(
+  return domObservable(
     type,
     props,
     children$.map(i => (typeof i === 'string' ? just(i) : i))
@@ -204,7 +161,32 @@ export const just = value =>
     ob.next(value)
   })
 
+const idle$ = new O.Observable(observer => {
+  let _closed = false
+  let id = 0
+
+  const schedule = () => (id = requestIdleCallback(onEvent))
+
+  const onEvent = obj => {
+    observer.next(obj)
+    if (!_closed) schedule()
+  }
+  schedule()
+  return () => {
+    cancelIdleCallback(id)
+    _closed = true
+  }
+})
 export const oncePerFrame = $ =>
   O.multicast(O.sample(R.identity, O.frames(), [$]))
 export const whenFree = (budget, $) =>
-  O.multicast(O.sample(R.identity, new IdleObservable(), [$]))
+  O.multicast(
+    O.sample(
+      R.identity,
+      O.filter(i => {
+        const timeRemaining = i.timeRemaining()
+        return timeRemaining > budget
+      }, idle$),
+      [$]
+    )
+  )

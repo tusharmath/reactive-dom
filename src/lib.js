@@ -1,8 +1,11 @@
 import * as O from 'observable-air'
 import * as R from 'ramda'
-import {whenFree} from './dom'
 
-const seconds = R.compose(O.scan(i => (i === 9 ? 0 : i + 1), 0), O.interval)
+const seconds = R.compose(
+  O.multicast,
+  O.scan(i => (i === 9 ? 0 : i + 1), 0),
+  O.interval
+)
 
 const MAX_RANGE = 100
 const getINC = (n, i) =>
@@ -12,11 +15,10 @@ const containerScale = i => ({
   transform: `scaleX(${1 - i / MAX_RANGE * 10}) scaleY(1) translateZ(0.1px)`
 })
 
-
 /**
  * Time stream which is emitted when there is time :P
  */
-export const timer$ = whenFree(10, seconds(1000))
+export const timer$ = seconds(1000)
 
 /**
  * Scale animation stream which is emitted when we have the capability to render
@@ -26,4 +28,3 @@ export const scale$ = R.compose(
   O.scan(([n, i]) => [n + getINC(n, i), getINC(n, i)], [0, 1]),
   R.always(O.multicast(O.frames()))
 )()
-
