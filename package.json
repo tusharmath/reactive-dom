@@ -4,16 +4,35 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "karma start && karma run",
+    "start": "webpack-dev-server -d --entry demo/app.js"
   },
   "author": "Tushar Mathur <tusharmath@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "hoe": "^6.1.0",
-    "observable-air": "^11.1.0",
-    "ramda": "^0.25.0"
+    "observable-air": "^11.1.1"
   },
   "devDependencies": {
-    "prettier": "^1.11.1"
+    "@types/chai": "^4.1.2",
+    "@types/mocha": "^5.0.0",
+    "@types/node": "^9.6.0",
+    "chai": "^4.1.2",
+    "cz-conventional-changelog": "^2.1.0",
+    "karma": "^2.0.0",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^2.2.0",
+    "karma-mocha": "^1.3.0",
+    "karma-spec-reporter": "^0.0.32",
+    "karma-webpack": "^3.0.0",
+    "mocha": "^5.0.5",
+    "prettier": "^1.11.1",
+    "ts-loader": "^4.1.0",
+    "typescript": "^2.7.2",
+    "webpack-dev-server": "^3.1.1"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
