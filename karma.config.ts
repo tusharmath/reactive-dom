@@ -7,10 +7,10 @@ export = function(config: any) {
     // frameworks: ['mocha'],
     // frameworks: ['mocha', 'karma-typescript'],
     frameworks: ['mocha'],
-    files: ['./test.js'],
+    files: ['test/test.js'],
     exclude: [],
     preprocessors: {
-      './test.js': 'webpack' // *.tsx for React Jsx
+      'test/test.js': 'webpack' // *.tsx for React Jsx
     },
     // reporters: ['progress', 'karma-typescript'],
     // reporters: ['progress'],
@@ -27,7 +27,7 @@ export = function(config: any) {
 
     // start these browsers
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['Chrome'],
+    browsers: ['ChromeHeadless'],
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
