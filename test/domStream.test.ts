@@ -3,6 +3,7 @@ import {createTestScheduler, EVENT} from 'observable-air/test'
 import {domStream} from '../src/domStream'
 import {assert} from 'chai'
 import {html} from '../src/html'
+import {EventStart} from 'observable-air/src/internal/Events'
 
 const node = (results: any[]) => (results[0] ? results[0].value : null)
 describe('domStream', () => {
@@ -134,5 +135,19 @@ describe('domStream', () => {
     const expected = [EVENT.next(202, html(htmlString)), EVENT.complete(202)]
     assert.deepEqual(results, expected)
     assert.deepEqual(node(results), html(htmlString))
+  })
+
+  it('should unsubscribe from style$', () => {
+    const sh = createTestScheduler()
+    const style$ = sh.Hot([EVENT.next(2100, {transform: 'translateX(10px)'})])
+
+    sh.start(() => domStream('div.a', {style: style$}, [O.of('A')]))
+    const actual = style$.subscriptions
+    const subscription = (<EventStart>style$.subscriptions[0])
+    const expected = [
+      EVENT.start(202, subscription.subscription),
+      EVENT.end(2000, subscription.subscription)
+    ]
+    assert.deepEqual(actual, expected)
   })
 })
