@@ -4,6 +4,7 @@ import {domStream} from '../src/domStream'
 import {assert} from 'chai'
 import {html} from '../src/html'
 
+const node = (results: any[]) => (results[0] ? results[0].value : null)
 describe('domStream', () => {
   it('should create a new HTMLElement', () => {
     const sh = createTestScheduler()
@@ -38,15 +39,14 @@ describe('domStream', () => {
       2000
     )
     sh.advanceTo(201)
-    assert.deepEqual(results, [])
+    assert.deepEqual(node(results), null)
     sh.advanceTo(210)
-    assert.deepEqual(results, [
-      EVENT.next(210, html(`<div class="a"><span>B</span></div>`))
-    ])
+    assert.deepEqual(node(results), html(`<div class="a"><span>B</span></div>`))
     sh.advanceTo(220)
-    assert.deepEqual(results, [
-      EVENT.next(210, html(`<div class="a"><span>A</span><span>B</span></div>`))
-    ])
+    assert.deepEqual(
+      node(results),
+      html(`<div class="a"><span>A</span><span>B</span></div>`)
+    )
     sh.advanceTo(2000)
     assert.deepEqual(results, [
       EVENT.next(
@@ -106,20 +106,13 @@ describe('domStream', () => {
       2000
     )
     sh.advanceTo(201)
-    assert.deepEqual(results, [])
-
+    assert.deepEqual(node(results), null)
     sh.advanceTo(210)
-    assert.deepEqual(results, [
-      EVENT.next(210, html(`<div class="a"><span>A</span></div>`))
-    ])
+    assert.deepEqual(node(results), html(`<div class="a"><span>A</span></div>`))
     sh.advanceTo(220)
-    assert.deepEqual(results, [
-      EVENT.next(210, html(`<div class="a"><span>B</span></div>`))
-    ])
+    assert.deepEqual(node(results), html(`<div class="a"><span>B</span></div>`))
     sh.advanceTo(230)
-    assert.deepEqual(results, [
-      EVENT.next(210, html(`<div class="a"><span>C</span></div>`))
-    ])
+    assert.deepEqual(node(results), html(`<div class="a"><span>C</span></div>`))
     sh.advanceTo(240)
     assert.deepEqual(results, [
       EVENT.next(210, html(`<div class="a"><span>C</span></div>`)),
