@@ -29,8 +29,12 @@ const removeNode = (node: Node, child: NodeWithId) => {
 }
 
 function updateNodeWithChild(node: Node, child: NodeWithId) {
-  removeNode(node, child)
-  insertNode(node, child)
+  if (typeof child.node === 'string') {
+    node.childNodes[child.id].textContent = child.node
+  } else {
+    removeNode(node, child)
+    insertNode(node, child)
+  }
 }
 
 export const domStream = (
