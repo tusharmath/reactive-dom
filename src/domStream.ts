@@ -2,7 +2,10 @@ import * as O from 'observable-air'
 import {IObservable, Observable} from 'observable-air'
 import {createElement} from './createElement'
 
-export interface NodeProps {}
+export type Optional<T> = {[P in keyof T]?: T[P]}
+export interface NodeProps {
+  style?: IObservable<Optional<CSSStyleDeclaration>>
+}
 export type ReactiveElement = Node | string | number
 export type NodeWithId = {node: ReactiveElement; id: number}
 
@@ -37,21 +40,49 @@ function updateNodeWithChild(node: Node, child: NodeWithId) {
   }
 }
 
+const updateStyle = (node: HTMLElement, style: any) => {
+  const nodeStyle: any = node.style
+  for (var i in style) {
+    const styleElement = style[i]
+    if (style.hasOwnProperty(i) && nodeStyle[i] !== styleElement) {
+      nodeStyle[i] = styleElement
+    }
+  }
+}
+
+const NOOP = () => {}
 export const domStream = (
   sel: string,
   prop: NodeProps,
   children: Array<IObservable<ReactiveElement>>
 ) =>
   new Observable((observer, scheduler) => {
-    var node: Node
+    var node: HTMLElement
     const childMap: {[key: number]: boolean} = {}
+    const onError = (err: Error) => observer.error(err)
+
+    const initializeNode = () => {
+      node = createElement(sel)
+      if (prop.style) {
+        prop.style.subscribe(
+          {
+            next: style => updateStyle(node, style),
+            complete: NOOP,
+            error: onError
+          },
+          scheduler
+        )
+      }
+      return node
+    }
+
     const childObserver = {
       next: (child: NodeWithId) => {
         if (childMap[child.id]) {
           updateNodeWithChild(node, child)
         } else {
           if (!node) {
-            node = createElement(sel)
+            const node = initializeNode()
             insertNode(node, child)
             observer.next(node)
           } else {
@@ -61,8 +92,9 @@ export const domStream = (
         childMap[child.id] = true
       },
       complete: () => observer.complete(),
-      error: (err: Error) => observer.error(err)
+      error: onError
     }
+
     return O.merge(
       ...children.map((child$, id) => O.map(node => ({id, node}), child$))
     ).subscribe(childObserver, scheduler)

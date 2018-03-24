@@ -57,7 +57,7 @@ describe('domStream', () => {
     ])
   })
 
-  it('should wait for children to emit before inserting into dom', () => {
+  it('should wait for children before inserting into dom', () => {
     const sh = createTestScheduler()
     const {results} = sh.start(() =>
       domStream('div.a', {}, [sh.Hot('-----A----|')])
@@ -117,5 +117,22 @@ describe('domStream', () => {
 
     assert.strictEqual(div210, div220)
     assert.strictEqual(span210, span220)
+  })
+
+  it('should set style$', () => {
+    const sh = createTestScheduler()
+    const {results} = sh.start(() =>
+      domStream(
+        'div.a',
+        {
+          style: O.of({transform: 'translateX(10px)'})
+        },
+        [O.of('A')]
+      )
+    )
+    const htmlString = `<div class="a" style="transform: translateX(10px);"><span>A</span></div>`
+    const expected = [EVENT.next(202, html(htmlString)), EVENT.complete(202)]
+    assert.deepEqual(results, expected)
+    assert.deepEqual(node(results), html(htmlString))
   })
 })
