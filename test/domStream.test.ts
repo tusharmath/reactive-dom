@@ -138,4 +138,42 @@ describe('domStream', () => {
     ]
     assert.deepEqual(actual, expected)
   })
+
+  it('should set attr$', () => {
+    const sh = createTestScheduler()
+    const {results} = sh.start(() =>
+      domStream(
+        'a',
+        {
+          attrs: O.of({href: '/home.html'})
+        },
+        [O.of('A')]
+      )
+    )
+    const htmlString = `<a href="/home.html"><span>A</span></a>`
+    const expected = [EVENT.next(202, html(htmlString)), EVENT.complete(202)]
+    assert.deepEqual(results, expected)
+    assert.deepEqual(node(results), html(htmlString))
+  })
+
+  it('should unsubscribe from style$', () => {
+    const sh = createTestScheduler()
+    const attrs$ = sh.Hot(EVENT.next(2010, {href: '/home.html'}))
+    sh.start(() =>
+      domStream(
+        'a',
+        {
+          attrs: attrs$
+        },
+        [O.of('A')]
+      )
+    )
+    const actual = attrs$.subscriptions
+    const subscription = <EventStart>attrs$.subscriptions[0]
+    const expected = [
+      EVENT.start(202, subscription.subscription),
+      EVENT.end(2000, subscription.subscription)
+    ]
+    assert.deepEqual(actual, expected)
+  })
 })

@@ -6,6 +6,8 @@ import {CompositeSubscription} from 'observable-air/src/internal/Subscription'
 export type Optional<T> = {[P in keyof T]?: T[P]}
 export interface NodeProps {
   style?: IObservable<Optional<CSSStyleDeclaration>>
+  attrs?: IObservable<{[key: string]: string}>
+  props?: IObservable<{[key: string]: any}>
 }
 export type ReactiveElement = Node | string | number
 export type NodeWithId = {node: ReactiveElement; id: number}
@@ -51,6 +53,15 @@ const updateStyle = (node: HTMLElement, style: any) => {
   }
 }
 
+const updateAttributes = (node: HTMLElement, attrs: any) => {
+  for (var name in attrs) {
+    const value = attrs[name]
+    if (attrs.hasOwnProperty(name) && node.getAttribute(name) !== value) {
+      node.setAttribute(name, value)
+    }
+  }
+}
+
 const NOOP = () => {}
 export const domStream = (
   sel: string,
@@ -70,6 +81,19 @@ export const domStream = (
           prop.style.subscribe(
             {
               next: style => updateStyle(node, style),
+              complete: NOOP,
+              error: onError
+            },
+            scheduler
+          )
+        )
+      }
+
+      if (prop.attrs) {
+        cSub.add(
+          prop.attrs.subscribe(
+            {
+              next: attrs => updateAttributes(node, attrs),
               complete: NOOP,
               error: onError
             },
