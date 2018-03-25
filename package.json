@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "rollup -c ./rollup.config.js",
     "test": "karma start karma.config.js --single-run",
     "test:watch": "karma start karma.config.js",
     "travis-deploy-once": "travis-deploy-once",
@@ -28,6 +29,10 @@
     "karma-webpack": "^3.0.0",
     "mocha": "^5.0.5",
     "prettier": "^1.11.1",
+    "rollup": "^0.57.1",
+    "rollup-plugin-babili": "^3.1.1",
+    "rollup-plugin-commonjs": "^9.1.0",
+    "rollup-plugin-node-resolve": "^3.3.0",
     "semantic-release": "^15.1.4",
     "travis-deploy-once": "^4.4.1",
     "typescript": "^2.7.2"

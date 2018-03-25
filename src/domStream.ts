@@ -1,7 +1,7 @@
 import * as O from 'observable-air'
 import {IObservable, Observable} from 'observable-air'
 import {createElement} from './createElement'
-import {CompositeSubscription} from 'observable-air/src/internal/Subscription'
+import {ISubscription} from 'observable-air/src/core/internal/Subscription'
 
 export type Optional<T> = {[P in keyof T]?: T[P]}
 export interface NodeProps {
@@ -69,7 +69,7 @@ export const domStream = (
   children: Array<IObservable<ReactiveElement>>
 ) =>
   new Observable((observer, scheduler) => {
-    const cSub = new CompositeSubscription()
+    const cSub: Array<ISubscription> = []
     var node: HTMLElement
     const childMap: {[key: number]: boolean} = {}
     const onError = (err: Error) => observer.error(err)
@@ -77,7 +77,7 @@ export const domStream = (
     const initializeNode = () => {
       node = createElement(sel)
       if (prop.style) {
-        cSub.add(
+        cSub.push(
           prop.style.subscribe(
             {
               next: style => updateStyle(node, style),
@@ -90,7 +90,7 @@ export const domStream = (
       }
 
       if (prop.attrs) {
-        cSub.add(
+        cSub.push(
           prop.attrs.subscribe(
             {
               next: attrs => updateAttributes(node, attrs),
@@ -123,10 +123,10 @@ export const domStream = (
       error: onError
     }
 
-    cSub.add(
+    cSub.push(
       O.merge(
         ...children.map((child$, id) => O.map(node => ({id, node}), child$))
       ).subscribe(childObserver, scheduler)
     )
-    return cSub
+    return () => cSub.forEach(i => i.unsubscribe())
   })
