@@ -1,4 +1,6 @@
 language: node_js
+addons:
+  chrome: stable
 cache:
   directories:
     - ~/.npm
@@ -6,7 +8,6 @@ notifications:
   email: false
 node_js:
   - 'stable'
-  - '9'
 script:
   - yarn tsc -d
   - yarn build
