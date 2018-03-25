@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup -c ./rollup.config.js",
+    "prettier": "git ls-files | grep '.ts$' | xargs prettier --write --config=.prettierrc",
+    "semantic-release": "semantic-release",
     "test": "karma start karma.config.js --single-run",
     "test:watch": "karma start karma.config.js --browsers=ChromeHeadless",
-    "travis-deploy-once": "travis-deploy-once",
-    "semantic-release": "semantic-release"
+    "travis-deploy-once": "travis-deploy-once"
   },
   "author": "Tushar Mathur <tusharmath@gmail.com>",
   "license": "ISC",
