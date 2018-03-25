@@ -5,10 +5,8 @@ cache:
 notifications:
   email: false
 node_js:
+  - 'stable'
   - '9'
-  - '8'
-  - '6'
-  - '4'
 script:
   - yarn build
   - yarn test
