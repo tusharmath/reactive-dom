@@ -34,16 +34,14 @@ describe('domStream', () => {
 
   it('should maintain child order', () => {
     const sh = createTestScheduler()
-    const {results} = sh.subscribeTo(
-      () => domStream('div.a', {}, [sh.Hot('--A|'), sh.Hot('-B---|')]),
-      200,
-      2000
+    const {results} = sh.subscribeTo(() =>
+      domStream('div.a', {}, [sh.Hot('---A|'), sh.Hot('--B---|')])
     )
     sh.advanceTo(201)
     assert.deepEqual(node(results), null)
-    sh.advanceTo(210)
+    sh.advanceTo(202)
     assert.deepEqual(node(results), html(`<div class="a"><span>B</span></div>`))
-    sh.advanceTo(220)
+    sh.advanceTo(203)
     assert.deepEqual(
       node(results),
       html(`<div class="a"><span>A</span><span>B</span></div>`)
@@ -51,10 +49,10 @@ describe('domStream', () => {
     sh.advanceTo(2000)
     assert.deepEqual(results, [
       EVENT.next(
-        210,
+        202,
         html(`<div class="a"><span>A</span><span>B</span></div>`)
       ),
-      EVENT.complete(250)
+      EVENT.complete(206)
     ])
   })
 
@@ -64,54 +62,44 @@ describe('domStream', () => {
       domStream('div.a', {}, [sh.Hot('-----A----|')])
     )
     const expected = [
-      EVENT.next(250, html(`<div class="a"><span>A</span></div>`)),
-      EVENT.complete(300)
+      EVENT.next(205, html(`<div class="a"><span>A</span></div>`)),
+      EVENT.complete(210)
     ]
     assert.deepEqual(results, expected)
   })
 
   it('should update child nodes with time', () => {
     const sh = createTestScheduler()
-    const {results} = sh.subscribeTo(
-      () => domStream('div.a', {}, [sh.Hot('-ABC|')]),
-      200,
-      2000
+    const {results} = sh.subscribeTo(() =>
+      domStream('div.a', {}, [sh.Hot('--ABC|')])
     )
     sh.advanceTo(201)
-    assert.deepEqual(results, [])
+    assert.deepEqual(node(results), null)
+    sh.advanceTo(202)
+    assert.deepEqual(node(results), html(`<div class="a"><span>A</span></div>`))
+    sh.advanceTo(203)
+    assert.deepEqual(node(results), html(`<div class="a"><span>B</span></div>`))
+    sh.advanceTo(204)
+    assert.deepEqual(node(results), html(`<div class="a"><span>C</span></div>`))
 
-    sh.advanceTo(210)
+    sh.advanceTo(205)
     assert.deepEqual(results, [
-      EVENT.next(210, html(`<div class="a"><span>A</span></div>`))
-    ])
-    sh.advanceTo(220)
-    assert.deepEqual(results, [
-      EVENT.next(210, html(`<div class="a"><span>B</span></div>`))
-    ])
-    sh.advanceTo(230)
-    assert.deepEqual(results, [
-      EVENT.next(210, html(`<div class="a"><span>C</span></div>`))
-    ])
-    sh.advanceTo(240)
-    assert.deepEqual(results, [
-      EVENT.next(210, html(`<div class="a"><span>C</span></div>`)),
-      EVENT.complete(240)
+      EVENT.next(202, html(`<div class="a"><span>C</span></div>`)),
+      EVENT.complete(205)
     ])
   })
 
   it('should update text without create a new span', () => {
     const sh = createTestScheduler()
-    const {results} = sh.subscribeTo(
-      () => domStream('div.a', {}, [sh.Hot('-AB|')]),
-      200,
-      2000
+    const {results} = sh.subscribeTo(() =>
+      domStream('div.a', {}, [sh.Hot('--AB|')])
     )
-    sh.advanceTo(210)
+    sh.advanceTo(202)
     const div210 = node(results)
     const span210 = div210.childNodes[0]
     assert.deepEqual(div210, html(`<div class="a"><span>A</span></div>`))
 
-    sh.advanceTo(220)
+    sh.advanceTo(203)
     const div220 = node(results)
     const span220 = div220.childNodes[0]
     assert.deepEqual(div220, html(`<div class="a"><span>B</span></div>`))
@@ -143,7 +131,7 @@ describe('domStream', () => {
 
     sh.start(() => domStream('div.a', {style: style$}, [O.of('A')]))
     const actual = style$.subscriptions
-    const subscription = (<EventStart>style$.subscriptions[0])
+    const subscription = <EventStart>style$.subscriptions[0]
     const expected = [
       EVENT.start(202, subscription.subscription),
       EVENT.end(2000, subscription.subscription)
