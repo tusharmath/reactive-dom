@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rollup -c ./rollup.config.js",
     "test": "karma start karma.config.js --single-run",
-    "test:watch": "karma start karma.config.js",
+    "test:watch": "karma start karma.config.js --browsers=ChromeHeadless",
     "travis-deploy-once": "travis-deploy-once",
     "semantic-release": "semantic-release"
   },
