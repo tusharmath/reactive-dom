@@ -1,1 +1,1 @@
-export {domStream} from './src/domStream'
+export {HTMLElementObservable} from './src/HTMLElementObservable'

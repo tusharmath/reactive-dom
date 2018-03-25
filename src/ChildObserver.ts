@@ -1,4 +1,4 @@
-import {NodeProps, NodeWithId, ReactiveElement} from './domStream'
+import {NodeProps, NodeWithId, ReactiveElement} from './HTMLElementObservable'
 import {IObserver, IScheduler, ISubscription} from 'observable-air'
 import {createElement} from './createElement'
 import {AttributeObserver} from './AttributeObserver'
@@ -103,5 +103,6 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
     for (var i = 0; i < this.subs.length; i++) {
       this.subs[i].unsubscribe()
     }
+    this.closed = true
   }
 }
