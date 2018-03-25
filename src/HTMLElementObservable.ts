@@ -1,6 +1,6 @@
 import * as O from 'observable-air'
 import {IObservable, IObserver, IScheduler, ISubscription} from 'observable-air'
-import {ChildObserver} from './ChildObserver'
+import {ChildObserver} from './internal/ChildObserver'
 
 export type Optional<T> = {[P in keyof T]?: T[P]}
 export interface NodeProps {

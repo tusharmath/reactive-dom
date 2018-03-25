@@ -2,7 +2,7 @@ import * as O from 'observable-air'
 import {createTestScheduler, EVENT} from 'observable-air/test'
 import {HTMLElementObservable} from '../src/HTMLElementObservable'
 import {assert} from 'chai'
-import {html} from '../src/html'
+import {html} from '../src/internal/html'
 import {EventStart} from 'observable-air/src/internal/Events'
 
 const node = (results: any[]) => (results[0] ? results[0].value : null)

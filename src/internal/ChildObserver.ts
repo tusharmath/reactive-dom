@@ -1,4 +1,4 @@
-import {NodeProps, NodeWithId, ReactiveElement} from './HTMLElementObservable'
+import {NodeProps, NodeWithId, ReactiveElement} from '../HTMLElementObservable'
 import {IObserver, IScheduler, ISubscription} from 'observable-air'
 import {createElement} from './createElement'
 import {AttributeObserver} from './AttributeObserver'
