@@ -37,6 +37,14 @@ export = function(config: any) {
       require('karma-mocha'),
       require('karma-spec-reporter'),
       require('karma-chrome-launcher')
-    ]
+    ],
+
+    // For running on travis
+    customLaunchers: {
+      ChromeHeadlessNoSandbox: {
+        base: 'ChromeHeadless',
+        flags: ['--no-sandbox']
+      }
+    }
   })
 }
