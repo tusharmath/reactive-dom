@@ -1,4 +1,4 @@
-import {NodeProps, NodeWithId, ReactiveElement} from '../HTMLElementObservable'
+import {NodeInternalProps, NodeWithId, ReactiveElement} from '../HTMLElementObservable'
 import {IObserver, IScheduler, ISubscription} from 'observable-air'
 import {createElement} from './createElement'
 import {AttributeObserver} from './AttributeObserver'
@@ -21,7 +21,7 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
 
   constructor(
     selector: string,
-    private props: NodeProps,
+    private props: NodeInternalProps,
     private sink: IObserver<HTMLElement>,
     private sch: IScheduler
   ) {

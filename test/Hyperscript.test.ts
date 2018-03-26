@@ -21,4 +21,12 @@ describe('Hyperscript', () => {
     const output = html(`<div class="ab cd"></div>`)
     assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
   })
+
+  it('should create create node with attributes', () => {
+    const SH = createTestScheduler()
+    const view$ = h('a.link', {attrs: {href:'/home.html'}})
+    const {results} = SH.start(() => view$)
+    const output = html(`<a class="link" href="/home.html"></a>`)
+    assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
+  })
 })

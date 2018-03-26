@@ -3,7 +3,7 @@ import {IObservable, IObserver, IScheduler, ISubscription} from 'observable-air'
 import {ChildObserver} from './internal/ChildObserver'
 
 export type Optional<T> = {[P in keyof T]?: T[P]}
-export interface NodeProps {
+export interface NodeInternalProps {
   style?: IObservable<Optional<CSSStyleDeclaration>>
   attrs?: IObservable<{[key: string]: string}>
   props?: IObservable<{[key: string]: any}>
@@ -26,7 +26,7 @@ class DomStreamSubscription implements ISubscription {
 export class HTMLElementObservable implements IObservable<HTMLElement> {
   constructor(
     private sel: string,
-    private props: NodeProps,
+    private props: NodeInternalProps,
     private children: Array<IObservable<ReactiveElement>>
   ) {}
   subscribe(
