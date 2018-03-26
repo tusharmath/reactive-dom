@@ -8,7 +8,7 @@ import {IObservable} from 'observable-air'
 
 type ReactiveChildren = Array<IObservable<ReactiveElement> | ReactiveElement>
 
-export interface NodeExternalProps {
+export interface NodeData {
   style?:
     | Optional<CSSStyleDeclaration>
     | IObservable<Optional<CSSStyleDeclaration>>
@@ -27,23 +27,35 @@ const streamifyObj = (props: any) => {
   return nProps
 }
 
-// prettier-ignore
 export function h(selector: string): IObservable<HTMLElement>
-// prettier-ignore
-export function h(selector: string, children: ReactiveChildren): IObservable<HTMLElement>
-// prettier-ignore
-export function h(selector: string, children: ReactiveElement): IObservable<HTMLElement>
-// prettier-ignore
-export function h(selector: string, props: NodeExternalProps): IObservable<HTMLElement>
-// prettier-ignore
-export function h(selector: string, props: NodeExternalProps, children: ReactiveChildren): IObservable<HTMLElement>
-// prettier-ignore
-export function h(selector: any, props?: any, children?: any): IObservable<HTMLElement> {
+export function h(
+  selector: string,
+  children: ReactiveChildren
+): IObservable<HTMLElement>
+export function h(
+  selector: string,
+  children: ReactiveElement
+): IObservable<HTMLElement>
+export function h(selector: string, props: NodeData): IObservable<HTMLElement>
+export function h(
+  selector: string,
+  props: NodeData,
+  children: ReactiveChildren
+): IObservable<HTMLElement>
+export function h(
+  selector: any,
+  props?: any,
+  children?: any
+): IObservable<HTMLElement> {
   return arguments.length === 1
     ? new HTMLElementObservable(selector, {}, [O.of('')])
     : arguments.length === 2
       ? Array.isArray(props)
         ? new HTMLElementObservable(selector, {}, props.map(toStream))
         : new HTMLElementObservable(selector, streamifyObj(props), [O.of('')])
-      : new HTMLElementObservable(selector, streamifyObj(props), children.map(toStream))
+      : new HTMLElementObservable(
+          selector,
+          streamifyObj(props),
+          children.map(toStream)
+        )
 }

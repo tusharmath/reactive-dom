@@ -1,7 +1,7 @@
-import {NodeInternalProps, NodeWithId} from '../HTMLElementObservable'
+import {NodeInternalData, NodeWithId} from '../HTMLElementObservable'
 import {IObserver, IScheduler, ISubscription} from 'observable-air'
 import {createElement} from './createElement'
-import {PropObserver} from './PropObserver'
+import {NodeDataObserver} from './NodeDataObserver'
 import {updateAttrs} from './updateAttributes'
 import {updateStyle} from './updateStyle'
 import {toNode} from './toNode'
@@ -16,7 +16,7 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
 
   constructor(
     selector: string,
-    private props: NodeInternalProps,
+    private nodeData: NodeInternalData,
     private sink: IObserver<HTMLElement>,
     private sch: IScheduler
   ) {
@@ -50,9 +50,9 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
       attrs: updateAttrs,
       style: updateStyle
     }
-    const props: any = this.props
+    const props: any = this.nodeData
     for (var i in props) {
-      const observer = new PropObserver(this.elm, this.sink, P[i])
+      const observer = new NodeDataObserver(this.elm, this.sink, P[i])
       this.subs.push(props[i].subscribe(observer, this.sch))
     }
   }

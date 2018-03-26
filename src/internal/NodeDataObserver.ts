@@ -1,6 +1,6 @@
 import {IObserver} from 'observable-air'
 
-export class PropObserver<T> implements IObserver<T> {
+export class NodeDataObserver<T> implements IObserver<T> {
   constructor(
     private elm: HTMLElement,
     private sink: IObserver<any>,
