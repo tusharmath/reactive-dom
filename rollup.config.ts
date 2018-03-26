@@ -24,7 +24,7 @@ export = [
       sourcemap: true,
       globals
     },
-    plugins: [commonjs(), uglify()]
+    plugins: [commonjs(), uglify({comments: false})]
   },
   {
     input: input,
@@ -59,6 +59,6 @@ export = [
       file: `./.dist/${name}.es.min.js`,
       sourcemap: true
     },
-    plugins: [commonjs({}), uglify()]
+    plugins: [commonjs({}), uglify({comments: false})]
   }
 ]
