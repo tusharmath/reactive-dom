@@ -5,6 +5,7 @@ import {NodeDataObserver} from './NodeDataObserver'
 import {updateAttrs} from './updateAttributes'
 import {updateStyle} from './updateStyle'
 import {toNode} from './toNode'
+import {updateProps} from './updateProps'
 
 export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
   // child positions
@@ -46,10 +47,7 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
   }
 
   private attachMeta$() {
-    const P: any = {
-      attrs: updateAttrs,
-      style: updateStyle
-    }
+    const P: any = {attrs: updateAttrs, style: updateStyle, props: updateProps}
     const props: any = this.nodeData
     for (var i in props) {
       const observer = new NodeDataObserver(this.elm, this.sink, P[i])

@@ -114,80 +114,82 @@ describe('HTMLElementObservable', () => {
     assert.strictEqual(span210, span220)
   })
 
-  it('should set style$', () => {
-    const sh = createTestScheduler()
-    const {results} = sh.start(
-      () =>
-        new HTMLElementObservable(
-          'div.a',
-          {
-            style: O.of({transform: 'translateX(10px)'})
-          },
-          [O.of('A')]
-        )
-    )
-    const htmlString = `<div class="a" style="transform: translateX(10px);"><span>A</span></div>`
-    const expected = [EVENT.next(201, html(htmlString)), EVENT.complete(201)]
-    assert.deepEqual(results, expected)
-    assert.deepEqual(node(results), html(htmlString))
+  describe('style$', () => {
+    it('should set style$', () => {
+      const sh = createTestScheduler()
+      const {results} = sh.start(
+        () =>
+          new HTMLElementObservable(
+            'div.a',
+            {
+              style: O.of({transform: 'translateX(10px)'})
+            },
+            [O.of('A')]
+          )
+      )
+      const htmlString = `<div class="a" style="transform: translateX(10px);"><span>A</span></div>`
+      const expected = [EVENT.next(201, html(htmlString)), EVENT.complete(201)]
+      assert.deepEqual(results, expected)
+      assert.deepEqual(node(results), html(htmlString))
+    })
+
+    it('should unsubscribe from style$', () => {
+      const sh = createTestScheduler()
+      const style$ = sh.Hot([EVENT.next(2100, {transform: 'translateX(10px)'})])
+
+      sh.start(
+        () => new HTMLElementObservable('div.a', {style: style$}, [O.of('A')])
+      )
+      const actual = style$.subscriptions
+      const subscription = <EventStart>style$.subscriptions[0]
+      const expected = [
+        EVENT.start(201, subscription.subscription),
+        EVENT.end(2000, subscription.subscription)
+      ]
+      assert.deepEqual(actual, expected)
+    })
   })
+  describe('attrs$', () => {
+    it('should set attr$', () => {
+      const sh = createTestScheduler()
+      const {results} = sh.start(
+        () =>
+          new HTMLElementObservable(
+            'a',
+            {
+              attrs: O.of({href: '/home.html'})
+            },
+            [O.of('A')]
+          )
+      )
+      const htmlString = `<a href="/home.html"><span>A</span></a>`
+      const expected = [EVENT.next(201, html(htmlString)), EVENT.complete(201)]
+      assert.deepEqual(results, expected)
+      assert.deepEqual(node(results), html(htmlString))
+    })
 
-  it('should unsubscribe from style$', () => {
-    const sh = createTestScheduler()
-    const style$ = sh.Hot([EVENT.next(2100, {transform: 'translateX(10px)'})])
-
-    sh.start(
-      () => new HTMLElementObservable('div.a', {style: style$}, [O.of('A')])
-    )
-    const actual = style$.subscriptions
-    const subscription = <EventStart>style$.subscriptions[0]
-    const expected = [
-      EVENT.start(201, subscription.subscription),
-      EVENT.end(2000, subscription.subscription)
-    ]
-    assert.deepEqual(actual, expected)
+    it('should unsubscribe from style$', () => {
+      const sh = createTestScheduler()
+      const attrs$ = sh.Hot(EVENT.next(2010, {href: '/home.html'}))
+      sh.start(
+        () =>
+          new HTMLElementObservable(
+            'a',
+            {
+              attrs: attrs$
+            },
+            [O.of('A')]
+          )
+      )
+      const actual = attrs$.subscriptions
+      const subscription = <EventStart>attrs$.subscriptions[0]
+      const expected = [
+        EVENT.start(201, subscription.subscription),
+        EVENT.end(2000, subscription.subscription)
+      ]
+      assert.deepEqual(actual, expected)
+    })
   })
-
-  it('should set attr$', () => {
-    const sh = createTestScheduler()
-    const {results} = sh.start(
-      () =>
-        new HTMLElementObservable(
-          'a',
-          {
-            attrs: O.of({href: '/home.html'})
-          },
-          [O.of('A')]
-        )
-    )
-    const htmlString = `<a href="/home.html"><span>A</span></a>`
-    const expected = [EVENT.next(201, html(htmlString)), EVENT.complete(201)]
-    assert.deepEqual(results, expected)
-    assert.deepEqual(node(results), html(htmlString))
-  })
-
-  it('should unsubscribe from style$', () => {
-    const sh = createTestScheduler()
-    const attrs$ = sh.Hot(EVENT.next(2010, {href: '/home.html'}))
-    sh.start(
-      () =>
-        new HTMLElementObservable(
-          'a',
-          {
-            attrs: attrs$
-          },
-          [O.of('A')]
-        )
-    )
-    const actual = attrs$.subscriptions
-    const subscription = <EventStart>attrs$.subscriptions[0]
-    const expected = [
-      EVENT.start(201, subscription.subscription),
-      EVENT.end(2000, subscription.subscription)
-    ]
-    assert.deepEqual(actual, expected)
-  })
-
   it('should create elements with empty string', () => {
     const sh = createTestScheduler()
     const {results} = sh.start(
@@ -227,5 +229,37 @@ describe('HTMLElementObservable', () => {
       node(results),
       html(`<div class="wonky"><h1><span>No Air</span></h1></div>`)
     )
+  })
+
+  describe('props$', () => {
+    it('should set props$', () => {
+      const sh = createTestScheduler()
+      const {results} = sh.start(
+        () =>
+          new HTMLElementObservable(
+            'div',
+            {
+              props: O.of({isWonky: true})
+            },
+            [O.of('A')]
+          )
+      )
+      assert.isTrue(node(results).isWonky)
+    })
+
+    it('should unsubscribe from style$', () => {
+      const sh = createTestScheduler()
+      const props$ = sh.Hot([EVENT.next(2100, {})])
+      sh.start(
+        () => new HTMLElementObservable('div.a', {props: props$}, [O.of('A')])
+      )
+      const actual = props$.subscriptions
+      const subscription = <EventStart>props$.subscriptions[0]
+      const expected = [
+        EVENT.start(201, subscription.subscription),
+        EVENT.end(2000, subscription.subscription)
+      ]
+      assert.deepEqual(actual, expected)
+    })
   })
 })
