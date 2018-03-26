@@ -6,7 +6,9 @@ import {
 import * as O from 'observable-air'
 import {IObservable} from 'observable-air'
 
-export type ReactiveChildren = Array<IObservable<ReactiveElement> | ReactiveElement>
+export type ReactiveChildren = Array<
+  IObservable<ReactiveElement> | ReactiveElement
+>
 
 export interface NodeData {
   style?:
@@ -22,7 +24,7 @@ const streamifyObj = (props: any) => {
   const nProps: any = {}
   for (var i in props)
     nProps[i] =
-      typeof props.subscribe !== 'function' ? O.of(props[i]) : props[i]
+      typeof props[i].subscribe !== 'function' ? O.of(props[i]) : props[i]
 
   return nProps
 }
