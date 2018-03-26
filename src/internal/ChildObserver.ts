@@ -1,15 +1,10 @@
-import {NodeInternalProps, NodeWithId, ReactiveElement} from '../HTMLElementObservable'
+import {NodeInternalProps, NodeWithId} from '../HTMLElementObservable'
 import {IObserver, IScheduler, ISubscription} from 'observable-air'
 import {createElement} from './createElement'
-import {AttributeObserver} from './AttributeObserver'
-import {StyleObserver} from './StyleObserver'
-
-const toNode = (el: ReactiveElement) => {
-  if (el instanceof Node) return el
-  const node = createElement('span')
-  node.textContent = el.toString()
-  return node
-}
+import {PropObserver} from './PropObserver'
+import {updateAttrs} from './updateAttributes'
+import {updateStyle} from './updateStyle'
+import {toNode} from './toNode'
 
 export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
   // child positions
@@ -52,13 +47,12 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
 
   private attachMeta$() {
     const P: any = {
-      attrs: AttributeObserver,
-      style: StyleObserver
+      attrs: updateAttrs,
+      style: updateStyle
     }
     const props: any = this.props
-
     for (var i in props) {
-      const observer = new P[i](this.elm, this.sink)
+      const observer = new PropObserver(this.elm, this.sink, P[i])
       this.subs.push(props[i].subscribe(observer, this.sch))
     }
   }
