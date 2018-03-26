@@ -6,7 +6,7 @@ import {
 import * as O from 'observable-air'
 import {IObservable} from 'observable-air'
 
-type ReactiveChildren = Array<IObservable<ReactiveElement> | ReactiveElement>
+export type ReactiveChildren = Array<IObservable<ReactiveElement> | ReactiveElement>
 
 export interface NodeData {
   style?:
