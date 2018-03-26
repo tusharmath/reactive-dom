@@ -187,4 +187,45 @@ describe('HTMLElementObservable', () => {
     ]
     assert.deepEqual(actual, expected)
   })
+
+  it('should create elements with empty string', () => {
+    const sh = createTestScheduler()
+    const {results} = sh.start(
+      () => new HTMLElementObservable('div.wonky', {}, [O.of('')])
+    )
+    const expected = [
+      EVENT.next(201, html(`<div class="wonky"></div>`)),
+      EVENT.complete(201)
+    ]
+    assert.deepEqual(results, expected)
+  })
+
+  it('should should delete elements on empty string', () => {
+    const sh = createTestScheduler()
+    const child$ = sh.Hot(
+      EVENT.next(212, html(`<h1><span>Air</span></h1>`)),
+      EVENT.next(213, ``),
+      EVENT.next(214, html(`<h1><span>No Air</span></h1>`)),
+      EVENT.complete(215)
+    )
+    const {results} = sh.subscribeTo(
+      () => new HTMLElementObservable('div.wonky', {}, [child$])
+    )
+
+    assert.deepEqual(node(results), null)
+    sh.advanceTo(212)
+    assert.deepEqual(
+      node(results),
+      html(`<div class="wonky"><h1><span>Air</span></h1></div>`)
+    )
+
+    sh.advanceTo(213)
+    assert.deepEqual(node(results), html(`<div class="wonky"></div>`))
+
+    sh.advanceTo(214)
+    assert.deepEqual(
+      node(results),
+      html(`<div class="wonky"><h1><span>No Air</span></h1></div>`)
+    )
+  })
 })

@@ -39,63 +39,79 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
 
   next(child: NodeWithId): void {
     // node exists at a particular position and needs updating
-    if (this.pos.has(child.id)) {
-      const childNode = this.elm.childNodes[child.id]
-
-      // node is of text type and is different
-      if (
-        typeof child.node === 'string' &&
-        childNode.textContent !== child.node
-      ) {
-        childNode.textContent = child.node
-      } else {
-        // node is a new HTMLElement
-        this.elm.removeChild(childNode)
-        this.insert(child)
-      }
-    } else {
-      // node doesn't exist and needs to be inserted
-      this.insert(child)
-    }
-
-    // update position
-    this.pos.add(child.id)
+    if (this.canRemove(child)) this.remove(child)
+    if (this.canUpdate(child)) this.updateText(child)
+    if (this.canInsert(child)) this.insert(child)
 
     if (this.started === false) {
-      // subscribe to meta streams
-
-      // subscribe to attribute stream
-      if (this.props.attrs) {
-        this.subs.push(
-          this.props.attrs.subscribe(
-            new AttributeObserver(this.elm, this.sink),
-            this.sch
-          )
-        )
-      }
-
-      // subscribe to style stream
-      if (this.props.style) {
-        this.subs.push(
-          this.props.style.subscribe(
-            new StyleObserver(this.elm, this.sink),
-            this.sch
-          )
-        )
-      }
-
+      this.attachMeta$()
       this.sink.next(this.elm)
       this.started = true
     }
   }
 
+  private attachMeta$() {
+    const P: any = {
+      attrs: AttributeObserver,
+      style: StyleObserver
+    }
+    const props: any = this.props
+
+    for (var i in props) {
+      const observer = new P[i](this.elm, this.sink)
+      this.subs.push(props[i].subscribe(observer, this.sch))
+    }
+  }
+
+  private canInsert(child: NodeWithId) {
+    return (
+      (this.pos.has(child.id) && typeof child.node !== 'string') ||
+      !this.pos.has(child.id)
+    )
+  }
+
+  private canUpdate(child: NodeWithId) {
+    return this.pos.has(child.id) && typeof child.node === 'string'
+  }
+
+  private canRemove(child: NodeWithId) {
+    return (
+      this.pos.has(child.id) &&
+      (child.node === '' || typeof child.node !== 'string')
+    )
+  }
+
+  private updateText(child: NodeWithId) {
+    const currentNode = this.currentNode(child)
+    if (
+      currentNode &&
+      typeof child.node === 'string' &&
+      currentNode.textContent !== child.node
+    ) {
+      currentNode.textContent = child.node
+    }
+  }
+
+  private currentNode(child: NodeWithId) {
+    return this.elm.childNodes[child.id]
+  }
+
+  private remove(child: NodeWithId) {
+    this.elm.removeChild(this.currentNode(child))
+    this.pos.delete(child.id)
+  }
+
   private insert(child: NodeWithId) {
-    const newChild = toNode(child.node)
-    const htmlElement = this.elm
-    if (htmlElement.childNodes.length > child.id) {
-      htmlElement.insertBefore(newChild, htmlElement.childNodes[child.id])
-    } else {
-      htmlElement.appendChild(newChild)
+    if (child.node !== '') {
+      const newChild = toNode(child.node)
+      const htmlElement = this.elm
+      if (htmlElement.childNodes.length > child.id) {
+        htmlElement.insertBefore(newChild, htmlElement.childNodes[child.id])
+      } else {
+        htmlElement.appendChild(newChild)
+      }
+      // update position
+      this.pos.add(child.id)
     }
   }
 

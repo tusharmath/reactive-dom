@@ -1,1 +1,1 @@
-export {HTMLElementObservable} from './src/HTMLElementObservable'
+export {h} from './src/Hyperscript'

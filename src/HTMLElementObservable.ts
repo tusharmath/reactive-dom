@@ -8,7 +8,7 @@ export interface NodeProps {
   attrs?: IObservable<{[key: string]: string}>
   props?: IObservable<{[key: string]: any}>
 }
-export type ReactiveElement = Node | string | number
+export type ReactiveElement = HTMLElement | string | number
 export type NodeWithId = {node: ReactiveElement; id: number}
 
 class DomStreamSubscription implements ISubscription {
