@@ -1,10 +1,10 @@
 import {createTestScheduler, EVENT} from 'observable-air/test'
-import {h} from '../src/Hyperscript'
+import {h} from '../src/h'
 import {assert} from 'chai'
 import {html} from '../src/internal/html'
 import * as O from 'observable-air'
 
-describe('Hyperscript', () => {
+describe('h', () => {
   it('should create a dom tree', () => {
     const SH = createTestScheduler()
     const view$ = h('div.ab.cd', [h('h1', ['This is a test'])])

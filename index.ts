@@ -1,1 +1,1 @@
-export {h} from './src/Hyperscript'
+export {h} from './src/h'
