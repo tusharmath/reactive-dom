@@ -1,7 +1,7 @@
-# reactive-dom [![Build Status](https://travis-ci.org/tusharmath/reactive-dom.svg?branch=master)](https://travis-ci.org/tusharmath/reactive-dom)
+# reactive-dom [![Build Status](https://travis-ci.org/tusharmath/reactive-dom.svg?branch=master)](https://travis-ci.org/tusharmath/reactive-dom) 
+Write views declaratively without creating a virtual DOM.
 
-A library that lets you write views declaratively without creating a Virtual DOM.
----
+- [ ]
 
 ## Links
 - [Usage](#usage)
@@ -86,7 +86,7 @@ h('div', {style: style$}, [
 ```
 
 ## Wish List
--[ ] Server Side Rendering.
--[ ] Applying CSS classes conditionally.
--[ ] Refactor public API to add custom plugins.
--[ ] Figure out event handling.
+- Server Side Rendering.
+- Applying CSS classes conditionally.
+- Refactor public API to add custom plugins.
+- Figure out event handling.
