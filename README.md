@@ -1,18 +1,26 @@
 # reactive-dom [![Build Status](https://travis-ci.org/tusharmath/reactive-dom.svg?branch=master)](https://travis-ci.org/tusharmath/reactive-dom)
-Reactive DOM is a really fast observable based library for building high performance user interfaces.
+
+**Reactive DOM** is an **observable** based library for building high performance user interfaces.
+
+It uses observables to setup the pipes initially between various data sources and DOM elements. Whenever the data changes, all the relevant DOM elements get updated automatically.
 
 ## Links
 - [Usage](#usage)
-- [Description](#description)
+- [Virtual DOM vs Reactive DOM](#virtualdomvsreactivedom)
 - [Example](#example)
 - [Wish List](#wishlist)
 - [Demo](https://github.com/tusharmath/reactive-dom/tree/master/demo)
 - [Hyperscript](#hyperscript)
 
-## Description
-Virtual DOM (VDom) isn't the most efficient abstraction. It overloads the CPU with a lot of work to compute the diff and later after the diff is applied it overload the garbage collector with a lot of virtual elements to cleanup. Other major problem with most VDom implementations is — that there is no way to control the order of DOM updates or prioritize certain DOM updates over others.
+## Virtual DOM vs Reactive DOM
 
- **Reactive DOM** doesn't use any form of Virtual DOM implementation so it doesn't need to compute any diffs. It uses **Observables** to setup the pipes initially between data sources and DOM elements. Whenever the data updates, due to the inherent reactive nature of observables, all the relevant DOM elements get updated automatically.
+Feature | Virtual DOM | Reactive DOM
+---     |---          | ---
+**Semantics**| Declarative using `jsx` or `hyperscript` | Declarative using `hyperscript`
+**Memory** | Usage is **high** because of a lot of intermediatory virtual DOM elements are created every time the DOM updates. The number of elements are also linearly proportional to size of the DOM tree. | Usage is very **low** because once the data pipeline is set, on every update the data is converted into a tiny `DOM Mutation Object` which has very basic information about what to update.
+**CPU** | Its **high** because a lot of time is spent in calculating diff and figuring out what has changed, this is again mostly linearly proportional to the total number of DOM elements in the view.| It's **low** as no diff is required. The DOM Elements subscribe to only the part of the data that is needed for rendering that particular element's props/styles/attributes or children and updates whenever the data changes.
+**Scheduling** | Once the diff phase starts the dom updating is left to the library. Prioritizing certain DOM updates over others isn't that simple. | Using observables, features such as `batch`, `throttle` or `delay` become extremely simple.
+**Initialization** | Need manually to bind to hooks such as `componentWillMount()` and `componentWillUnmount()`. This makes resource allocation and disposal a manual process. | Evaluation is lazy ie. unless an element is inserted into the DOM nothing gets initialized. The resources are automatically released when the element is not visible any more.
 
 ## Usage
 
@@ -92,6 +100,6 @@ h('div', {style: style$}, [
 
 ## Wish List
 - Server Side Rendering.
-- Apply CSS classes conditionally.
+- Apply CSS classes conditionally (easy).
 - Refactor public API to add custom plugins.
 - Figure out event handling.
