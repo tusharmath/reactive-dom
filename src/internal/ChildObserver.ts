@@ -6,6 +6,7 @@ import {updateAttrs} from './updateAttributes'
 import {updateStyle} from './updateStyle'
 import {toNode} from './toNode'
 import {updateProps} from './updateProps'
+import {isHTMLElement} from './isHTMLElement'
 
 export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
   // child positions
@@ -57,30 +58,26 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
 
   private canInsert(child: NodeWithId) {
     return (
-      (this.pos.has(child.id) && typeof child.node !== 'string') ||
+      (this.pos.has(child.id) && isHTMLElement(child.node)) ||
       !this.pos.has(child.id)
     )
   }
 
   private canUpdate(child: NodeWithId) {
-    return this.pos.has(child.id) && typeof child.node === 'string'
+    return this.pos.has(child.id) && !isHTMLElement(typeof child.node)
   }
 
   private canRemove(child: NodeWithId) {
     return (
-      this.pos.has(child.id) &&
-      (child.node === '' || typeof child.node !== 'string')
+      this.pos.has(child.id) && (child.node === '' || isHTMLElement(child.node))
     )
   }
 
   private updateText(child: NodeWithId) {
     const currentNode = this.currentNode(child)
-    if (
-      currentNode &&
-      typeof child.node === 'string' &&
-      currentNode.textContent !== child.node
-    ) {
-      currentNode.textContent = child.node
+    const nodeString = child.node.toString()
+    if (currentNode && currentNode.textContent !== nodeString) {
+      currentNode.textContent = nodeString
     }
   }
 

@@ -22,7 +22,6 @@ describe('HTMLElementObservable', () => {
       ]
       assert.deepEqual(results, expected)
     })
-
     it('should maintain child order', () => {
       const sh = createTestScheduler()
       const {results} = sh.subscribeTo(
@@ -53,7 +52,6 @@ describe('HTMLElementObservable', () => {
         EVENT.complete(206)
       ])
     })
-
     it('should wait for children before inserting into dom', () => {
       const sh = createTestScheduler()
       const {results} = sh.start(
@@ -65,7 +63,6 @@ describe('HTMLElementObservable', () => {
       ]
       assert.deepEqual(results, expected)
     })
-
     it('should update child nodes with time', () => {
       const sh = createTestScheduler()
       const {results} = sh.subscribeTo(
@@ -95,8 +92,7 @@ describe('HTMLElementObservable', () => {
         EVENT.complete(205)
       ])
     })
-
-    it('should update text without create a new span', () => {
+    it('should update text (string) without create a new span', () => {
       const sh = createTestScheduler()
       const {results} = sh.subscribeTo(
         () => new HTMLElementObservable('div.a', {}, [sh.Hot('--AB|')])
@@ -114,6 +110,29 @@ describe('HTMLElementObservable', () => {
       assert.strictEqual(div210, div220)
       assert.strictEqual(span210, span220)
     })
+    it('should update text (number) without create a new span', () => {
+      const sh = createTestScheduler()
+      const {results} = sh.subscribeTo(
+        () =>
+          new HTMLElementObservable('div.a', {}, [
+            sh.Hot(EVENT.next(202, 1), EVENT.next(203, 2))
+          ])
+      )
+      sh.advanceTo(202)
+      console.log(results)
+      const div210 = node(results)
+      const span210 = div210.childNodes[0]
+      assert.deepEqual(div210, html(`<div class="a"><span>1</span></div>`))
+
+      sh.advanceTo(203)
+      console.log(results)
+      const div220 = node(results)
+      const span220 = div220.childNodes[0]
+      assert.deepEqual(div220, html(`<div class="a"><span>2</span></div>`))
+
+      assert.strictEqual(div210, div220)
+      assert.strictEqual(span210, span220)
+    })
     it('should create elements with empty string', () => {
       const sh = createTestScheduler()
       const {results} = sh.start(
@@ -125,7 +144,6 @@ describe('HTMLElementObservable', () => {
       ]
       assert.deepEqual(results, expected)
     })
-
     it('should should delete elements on empty string', () => {
       const sh = createTestScheduler()
       const child$ = sh.Hot(
@@ -154,7 +172,9 @@ describe('HTMLElementObservable', () => {
         html(`<div class="wonky"><h1><span>No Air</span></h1></div>`)
       )
     })
+    it('should reuse the child span')
   })
+
   it('should create a new HTMLElement', () => {
     const sh = createTestScheduler()
     const {results} = sh.start(
@@ -185,7 +205,6 @@ describe('HTMLElementObservable', () => {
       assert.deepEqual(results, expected)
       assert.deepEqual(node(results), html(htmlString))
     })
-
     it('should unsubscribe from style$', () => {
       const sh = createTestScheduler()
       const style$ = sh.Hot([EVENT.next(2100, {transform: 'translateX(10px)'})])
@@ -220,7 +239,6 @@ describe('HTMLElementObservable', () => {
       assert.deepEqual(results, expected)
       assert.deepEqual(node(results), html(htmlString))
     })
-
     it('should unsubscribe from style$', () => {
       const sh = createTestScheduler()
       const attrs$ = sh.Hot(EVENT.next(2010, {href: '/home.html'}))
@@ -259,7 +277,6 @@ describe('HTMLElementObservable', () => {
       )
       assert.isTrue(node(results).isWonky)
     })
-
     it('should unsubscribe from style$', () => {
       const sh = createTestScheduler()
       const props$ = sh.Hot([EVENT.next(2100, {})])
