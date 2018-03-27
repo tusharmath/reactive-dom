@@ -45,6 +45,9 @@ export = function(config: any) {
         base: 'ChromeHeadless',
         flags: ['--no-sandbox']
       }
+    },
+    webpack: {
+      mode: 'development'
     }
   })
 }
