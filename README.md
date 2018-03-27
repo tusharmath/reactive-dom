@@ -1,13 +1,18 @@
-# reactive-dom [![Build Status](https://travis-ci.org/tusharmath/reactive-dom.svg?branch=master)](https://travis-ci.org/tusharmath/reactive-dom) 
-Write views declaratively without creating a virtual DOM.
+# reactive-dom [![Build Status](https://travis-ci.org/tusharmath/reactive-dom.svg?branch=master)](https://travis-ci.org/tusharmath/reactive-dom)
+Reactive DOM is a really fast observable based library for building high performance user interfaces.
 
 ## Links
 - [Usage](#usage)
+- [Description](#description)
 - [Example](#example)
 - [Wish List](#wishlist)
 - [Demo](https://github.com/tusharmath/reactive-dom/tree/master/demo)
 - [Hyperscript](#hyperscript)
 
+## Description
+Virtual DOM (VDom) isn't the most efficient abstraction. It overloads the CPU with a lot of work to compute the diff and later after the diff is applied it overload the garbage collector with a lot of virtual elements to cleanup. Other major problem with most VDom implementations is — that there is no way to control the order of DOM updates or prioritize certain DOM updates over others.
+
+ **Reactive DOM** doesn't use any form of Virtual DOM implementation so it doesn't need to compute any diffs. It uses **Observables** to setup the pipes initially between data sources and DOM elements. Whenever the data updates, due to the inherent reactive nature of observables, all the relevant DOM elements get updated automatically.
 
 ## Usage
 
