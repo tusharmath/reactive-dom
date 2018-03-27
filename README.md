@@ -35,7 +35,7 @@ import {h} from 'reactive-dom'
 
 ## Example
 ```js
-import * as O from 'observable-dom'
+import * as O from 'observable-air'
 import {h} from 'reactive-dom'
 
 // A timer stream which emits a value every 1000ms
@@ -53,8 +53,8 @@ O.forEach(i => document.body.appendChild(i), view$)
 ## Hyperscript
 Hyperscript or `h` is a helper function that helps in writing views in a declarative manner.
 
-**Element with children**
-Children are passed as an array to the `h` function.
+**Element with children:**
+Children are passed as an array to the `h` function. They can be of type `observable` or `string`.
 ```js
 h('div', [
   h('div', [
@@ -64,8 +64,9 @@ h('div', [
 ```
 
 
-**Element with an observable content**
-Children can take both `string` and `observable` type.
+**Element with an observable content:**
+
+Children can be of `observable` type.
 ```js
 const timer$ = O.scan(i => i + 1, 0, O.interval())
 h('div', [
@@ -73,8 +74,9 @@ h('div', [
 ])
 ```
 
-**Element with an observable style/attrs**
-Each element can take `attrs` or `style` to set the element's internal properties.
+**Element with an observable style/attrs:**
+
+Each element can take `attrs` or `style` to set the element's internal properties. The values for `attrs` and `style` can be either an observable or an object.
 ```js
 const timer$ = O.scan(i => i + 1, 0, O.interval())
 const color = i => ({color: `rgba(0, 0, 0, ${i})`})
@@ -90,6 +92,6 @@ h('div', {style: style$}, [
 
 ## Wish List
 - Server Side Rendering.
-- Applying CSS classes conditionally.
+- Apply CSS classes conditionally.
 - Refactor public API to add custom plugins.
 - Figure out event handling.
