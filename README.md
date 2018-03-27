@@ -1,8 +1,6 @@
 # reactive-dom [![Build Status](https://travis-ci.org/tusharmath/reactive-dom.svg?branch=master)](https://travis-ci.org/tusharmath/reactive-dom) 
 Write views declaratively without creating a virtual DOM.
 
-- [ ]
-
 ## Links
 - [Usage](#usage)
 - [Example](#example)
