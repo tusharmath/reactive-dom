@@ -119,13 +119,11 @@ describe('HTMLElementObservable', () => {
           ])
       )
       sh.advanceTo(202)
-      console.log(results)
       const div210 = node(results)
       const span210 = div210.childNodes[0]
       assert.deepEqual(div210, html(`<div class="a"><span>1</span></div>`))
 
       sh.advanceTo(203)
-      console.log(results)
       const div220 = node(results)
       const span220 = div220.childNodes[0]
       assert.deepEqual(div220, html(`<div class="a"><span>2</span></div>`))
