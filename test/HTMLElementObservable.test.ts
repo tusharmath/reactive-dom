@@ -170,7 +170,6 @@ describe('HTMLElementObservable', () => {
         html(`<div class="wonky"><h1><span>No Air</span></h1></div>`)
       )
     })
-    it('should reuse the child span')
   })
 
   it('should create a new HTMLElement', () => {
