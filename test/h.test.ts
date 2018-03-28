@@ -7,47 +7,27 @@ import {EventStart} from 'observable-air/src/internal/Events'
 
 describe('h', () => {
   const node = (results: any[]) => (results[0] ? results[0].value : null)
-  it('should create a dom tree', () => {
-    const SH = createTestScheduler()
-    const view$ = h('div.ab.cd', [h('h1', ['This is a test'])])
-    const {results} = SH.start(() => view$)
-    const output = html(
-      `<div class="ab cd"><h1><span>This is a test</span></h1></div>`
-    )
-    assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
-  })
-  it('should create a empty tree', () => {
-    const SH = createTestScheduler()
-    const view$ = h('div.ab.cd')
-    const {results} = SH.start(() => view$)
-    const output = html(`<div class="ab cd"></div>`)
-    assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
-  })
-  it('should create create node with attributes', () => {
-    const SH = createTestScheduler()
-    const view$ = h('a.link', {
-      attrs: {href: '/home.html'},
-      style: {color: 'red'}
+  describe('new', () => {
+    it('should create a dom tree', () => {
+      const SH = createTestScheduler()
+      const view$ = h('div.ab.cd', [h('h1', ['This is a test'])])
+      const {results} = SH.start(() => view$)
+      const output = html(
+        `<div class="ab cd"><h1><span>This is a test</span></h1></div>`
+      )
+      assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
     })
-    const {results} = SH.start(() => view$)
-    const output = html(
-      `<a class="link" href="/home.html" style="color: red;"></a>`
-    )
-    assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
-  })
-  it('should attach observable data', () => {
-    const SH = createTestScheduler()
-    const view$ = h('a.link', {
-      attrs: {href: '/home.html'},
-      style: O.of({color: 'red'})
+    it('should create a new HTMLElement', () => {
+      const sh = createTestScheduler()
+      const {results} = sh.start(() => h('div.a', {}, [O.of('XXX')]))
+      const expected = [
+        EVENT.next(201, html(`<div class="a"><span>XXX</span></div>`)),
+        EVENT.complete(201)
+      ]
+      assert.deepEqual(results, expected)
     })
-    const {results} = SH.start(() => view$)
-    const output = html(
-      `<a class="link" href="/home.html" style="color: red;"></a>`
-    )
-    assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
   })
-  describe('append', () => {
+  describe('append$', () => {
     it('should insert an element at a location', () => {
       const SH = createTestScheduler()
       const append$ = O.delay(10, h('h1', ['X']))
@@ -75,7 +55,7 @@ describe('h', () => {
       ])
     })
   })
-  describe('children', () => {
+  describe('children[]', () => {
     it('should attach child HTMLElement', () => {
       const sh = createTestScheduler()
       const {results} = sh.start(() => h('div.a', {}, [O.of('A'), O.of('B')]))
@@ -219,15 +199,25 @@ describe('h', () => {
         html(`<div class="wonky"><h1><span>No Air</span></h1></div>`)
       )
     })
-  })
-  it('should create a new HTMLElement', () => {
-    const sh = createTestScheduler()
-    const {results} = sh.start(() => h('div.a', {}, [O.of('XXX')]))
-    const expected = [
-      EVENT.next(201, html(`<div class="a"><span>XXX</span></div>`)),
-      EVENT.complete(201)
-    ]
-    assert.deepEqual(results, expected)
+    it('should create a empty tree', () => {
+      const SH = createTestScheduler()
+      const view$ = h('div.ab.cd')
+      const {results} = SH.start(() => view$)
+      const output = html(`<div class="ab cd"></div>`)
+      assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
+    })
+    it('should attach observable data', () => {
+      const SH = createTestScheduler()
+      const view$ = h('a.link', {
+        attrs: {href: '/home.html'},
+        style: O.of({color: 'red'})
+      })
+      const {results} = SH.start(() => view$)
+      const output = html(
+        `<a class="link" href="/home.html" style="color: red;"></a>`
+      )
+      assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
+    })
   })
   describe('style$', () => {
     it('should set style$', () => {
@@ -296,6 +286,18 @@ describe('h', () => {
         EVENT.end(2000, subscription.subscription)
       ]
       assert.deepEqual(actual, expected)
+    })
+    it('should create create node with attributes', () => {
+      const SH = createTestScheduler()
+      const view$ = h('a.link', {
+        attrs: {href: '/home.html'},
+        style: {color: 'red'}
+      })
+      const {results} = SH.start(() => view$)
+      const output = html(
+        `<a class="link" href="/home.html" style="color: red;"></a>`
+      )
+      assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
     })
   })
   describe('props$', () => {
