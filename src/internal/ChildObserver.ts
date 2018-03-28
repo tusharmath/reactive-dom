@@ -1,11 +1,8 @@
 import {NodeInternalData, NodeWithId} from '../HTMLElementObservable'
+import * as O from 'observable-air'
 import {CompositeSubscription, IObserver, IScheduler} from 'observable-air'
 import {createElement} from './createElement'
-import {NodeDataObserver} from './NodeDataObserver'
-import {updateAttrs} from './updateAttributes'
-import {updateStyle} from './updateStyle'
 import {toNode} from './toNode'
-import {updateProps} from './updateProps'
 import {isHTMLElement} from './isHTMLElement'
 
 export class ChildObserver implements IObserver<NodeWithId> {
@@ -45,12 +42,46 @@ export class ChildObserver implements IObserver<NodeWithId> {
     }
   }
 
+  private onAttrs(attrs: any) {
+    const elm = this.elm
+    for (var name in attrs) {
+      const value = attrs[name]
+      if (attrs.hasOwnProperty(name) && elm.getAttribute(name) !== value) {
+        elm.setAttribute(name, value)
+      }
+    }
+  }
+
+  private onStyle(style: any) {
+    const nodeStyle: any = this.elm.style
+    for (var i in style) {
+      const styleElement = style[i]
+      if (style.hasOwnProperty(i) && nodeStyle[i] !== styleElement)
+        nodeStyle[i] = styleElement
+    }
+  }
+
+  private onProps(props: any) {
+    Object.assign(this.elm, props)
+  }
+
+  private onAppend(child: HTMLElement) {
+    this.elm.appendChild(child)
+  }
+
   private attachMeta$() {
-    const P: any = {attrs: updateAttrs, style: updateStyle, props: updateProps}
-    const props: any = this.nodeData
-    for (var i in props) {
-      const observer = new NodeDataObserver(this.elm, this.sink, P[i])
-      this.cSub.add(props[i].subscribe(observer, this.sch))
+    const data: any = this.nodeData
+    const onEvent: any = {
+      attrs: this.onAttrs,
+      style: this.onStyle,
+      props: this.onProps,
+      append: this.onAppend
+    }
+
+    for (var i in data) {
+      if (data.hasOwnProperty(i)) {
+        this.cSub.add(O.forEach(onEvent[i].bind(this), data[i], this.sch))
+      }
     }
   }
 
@@ -97,7 +128,6 @@ export class ChildObserver implements IObserver<NodeWithId> {
       } else {
         htmlElement.appendChild(newChild)
       }
-      // update position
       this.pos.add(child.id)
     }
   }

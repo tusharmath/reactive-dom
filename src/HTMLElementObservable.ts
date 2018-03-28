@@ -8,6 +8,7 @@ export interface NodeInternalData {
   style?: IObservable<Optional<CSSStyleDeclaration>>
   attrs?: IObservable<{[key: string]: string}>
   props?: IObservable<{[key: string]: any}>
+  append?: IObservable<HTMLElement>
 }
 export type ReactiveElement = HTMLElement | string | number
 export type NodeWithId = {node: ReactiveElement; id: number}
@@ -33,7 +34,6 @@ class HTMLElementObservable implements IObservable<HTMLElement> {
         scheduler
       )
     )
-
     return cSub
   }
 }

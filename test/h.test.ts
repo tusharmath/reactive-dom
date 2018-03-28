@@ -48,4 +48,33 @@ describe('h', () => {
     )
     assert.deepEqual(results, [EVENT.next(201, output), EVENT.complete(201)])
   })
+
+  describe('append', () => {
+    it('should insert an element at a location', () => {
+      const SH = createTestScheduler()
+      const append$ = O.delay(10, h('h1', ['X']))
+      const view$ = h('div', {append: append$}, [
+        h('h1', ['A']),
+        h('h1', ['B'])
+      ])
+      const {results} = SH.subscribeTo(() => view$)
+      const output201 = html(
+        `<div><h1><span>A</span></h1><h1><span>B</span></h1></div>`
+      )
+      const output215 = html(
+        `<div><h1><span>A</span></h1><h1><span>B</span></h1><h1><span>X</span></h1></div>`
+      )
+      SH.advanceTo(201)
+      assert.deepEqual(results, [
+        EVENT.next(201, output201),
+        EVENT.complete(201)
+      ])
+
+      SH.advanceTo(216)
+      assert.deepEqual(results, [
+        EVENT.next(201, output215),
+        EVENT.complete(201)
+      ])
+    })
+  })
 })
