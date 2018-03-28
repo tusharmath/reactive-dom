@@ -37,7 +37,7 @@ export class ChildObserver implements IObserver<NodeWithId> {
     // node exists at a particular position and needs updating
     if (this.canRemove(child)) this.remove(child)
     if (this.canUpdate(child)) this.updateText(child)
-    if (this.canInsert(child)) this.insert(child)
+    if (this.canInsert(child)) this.insertAt(child)
 
     if (this.started === false) {
       this.attachMeta$()
@@ -70,7 +70,7 @@ export class ChildObserver implements IObserver<NodeWithId> {
   }
 
   private onAppend(node: ReactiveElement) {
-    this.insert({node, id: -1})
+    this.insertAt({node, id: -1})
   }
 
   private attachMeta$() {
@@ -124,7 +124,7 @@ export class ChildObserver implements IObserver<NodeWithId> {
     this.pos.delete(child.id)
   }
 
-  private insert(child: NodeWithId) {
+  private insertAt(child: NodeWithId) {
     const newChild = toNode(child.node)
     const htmlElement = this.elm
     if (child.id > -1 && htmlElement.childNodes.length > child.id) {
