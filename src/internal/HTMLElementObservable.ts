@@ -1,7 +1,12 @@
 import * as O from 'observable-air'
-import {IObservable, IObserver, IScheduler, ISubscription} from 'observable-air'
-import {ChildObserver} from './internal/ChildObserver'
-import {CompositeSubscription} from 'observable-air/src/internal/Subscription'
+import {
+  CompositeSubscription,
+  IObservable,
+  IObserver,
+  IScheduler,
+  ISubscription
+} from 'observable-air'
+import {ChildObserver} from './ChildObserver'
 
 export type Optional<T> = {[P in keyof T]?: T[P]}
 export interface NodeInternalData {
@@ -13,7 +18,7 @@ export interface NodeInternalData {
 export type ReactiveElement = HTMLElement | string | number
 export type NodeWithId = {node: ReactiveElement; id: number}
 
-class HTMLElementObservable implements IObservable<HTMLElement> {
+export class HTMLElementObservable implements IObservable<HTMLElement> {
   constructor(
     private sel: string,
     private props: NodeInternalData,
@@ -37,9 +42,3 @@ class HTMLElementObservable implements IObservable<HTMLElement> {
     return cSub
   }
 }
-
-export const elm = (
-  sel: string,
-  prop: NodeInternalData,
-  children: Array<IObservable<ReactiveElement>>
-): IObservable<HTMLElement> => new HTMLElementObservable(sel, prop, children)

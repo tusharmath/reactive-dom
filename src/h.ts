@@ -1,4 +1,8 @@
-import {elm, Optional, ReactiveElement} from './HTMLElementObservable'
+import {
+  HTMLElementObservable,
+  Optional,
+  ReactiveElement
+} from './internal/HTMLElementObservable'
 import * as O from 'observable-air'
 import {IObservable} from 'observable-air'
 
@@ -47,10 +51,14 @@ export function h(
   children?: any
 ): IObservable<HTMLElement> {
   return arguments.length === 1
-    ? elm(selector, {}, [O.of('')])
+    ? new HTMLElementObservable(selector, {}, [O.of('')])
     : arguments.length === 2
       ? Array.isArray(props)
-        ? elm(selector, {}, props.map(toStream))
-        : elm(selector, streamifyObj(props), [O.of('')])
-      : elm(selector, streamifyObj(props), children.map(toStream))
+        ? new HTMLElementObservable(selector, {}, props.map(toStream))
+        : new HTMLElementObservable(selector, streamifyObj(props), [O.of('')])
+      : new HTMLElementObservable(
+          selector,
+          streamifyObj(props),
+          children.map(toStream)
+        )
 }

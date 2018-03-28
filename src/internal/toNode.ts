@@ -1,4 +1,4 @@
-import {ReactiveElement} from '../HTMLElementObservable'
+import {ReactiveElement} from './HTMLElementObservable'
 import {createElement} from './createElement'
 
 export const toNode = (el: ReactiveElement) => {

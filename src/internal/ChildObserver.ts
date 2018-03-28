@@ -1,4 +1,4 @@
-import {NodeInternalData, NodeWithId} from '../HTMLElementObservable'
+import {NodeInternalData, NodeWithId} from './HTMLElementObservable'
 import * as O from 'observable-air'
 import {CompositeSubscription, IObserver, IScheduler} from 'observable-air'
 import {createElement} from './createElement'
