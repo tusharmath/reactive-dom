@@ -1,18 +1,26 @@
 import * as O from 'observable-air'
 import {createTestScheduler, EVENT} from 'observable-air/test'
-import {HTMLElementObservable} from '../src/HTMLElementObservable'
+import {
+  HTMLElementObservable,
+  NodeInternalData,
+  ReactiveElement
+} from '../src/HTMLElementObservable'
 import {assert} from 'chai'
 import {html} from '../src/internal/html'
 import {EventStart} from 'observable-air/src/internal/Events'
+import {IObservable} from 'observable-air'
 
 const node = (results: any[]) => (results[0] ? results[0].value : null)
 describe('HTMLElementObservable', () => {
+  const elm = (
+    sel: string,
+    prop: NodeInternalData,
+    children: Array<IObservable<ReactiveElement>>
+  ) => new HTMLElementObservable(sel, prop, children)
   describe('children', () => {
     it('should attach child HTMLElement', () => {
       const sh = createTestScheduler()
-      const {results} = sh.start(
-        () => new HTMLElementObservable('div.a', {}, [O.of('A'), O.of('B')])
-      )
+      const {results} = sh.start(() => elm('div.a', {}, [O.of('A'), O.of('B')]))
       const expected = [
         EVENT.next(
           201,
@@ -24,12 +32,8 @@ describe('HTMLElementObservable', () => {
     })
     it('should maintain child order', () => {
       const sh = createTestScheduler()
-      const {results} = sh.subscribeTo(
-        () =>
-          new HTMLElementObservable('div.a', {}, [
-            sh.Hot('---A|'),
-            sh.Hot('--B---|')
-          ])
+      const {results} = sh.subscribeTo(() =>
+        elm('div.a', {}, [sh.Hot('---A|'), sh.Hot('--B---|')])
       )
       sh.advanceTo(201)
       assert.deepEqual(node(results), null)
@@ -54,8 +58,8 @@ describe('HTMLElementObservable', () => {
     })
     it('should wait for children before inserting into dom', () => {
       const sh = createTestScheduler()
-      const {results} = sh.start(
-        () => new HTMLElementObservable('div.a', {}, [sh.Hot('-----A----|')])
+      const {results} = sh.start(() =>
+        elm('div.a', {}, [sh.Hot('-----A----|')])
       )
       const expected = [
         EVENT.next(205, html(`<div class="a"><span>A</span></div>`)),
@@ -65,8 +69,8 @@ describe('HTMLElementObservable', () => {
     })
     it('should update child nodes with time', () => {
       const sh = createTestScheduler()
-      const {results} = sh.subscribeTo(
-        () => new HTMLElementObservable('div.a', {}, [sh.Hot('--ABC|')])
+      const {results} = sh.subscribeTo(() =>
+        elm('div.a', {}, [sh.Hot('--ABC|')])
       )
       sh.advanceTo(201)
       assert.deepEqual(node(results), null)
@@ -94,8 +98,8 @@ describe('HTMLElementObservable', () => {
     })
     it('should update text (string) without create a new span', () => {
       const sh = createTestScheduler()
-      const {results} = sh.subscribeTo(
-        () => new HTMLElementObservable('div.a', {}, [sh.Hot('--AB|')])
+      const {results} = sh.subscribeTo(() =>
+        elm('div.a', {}, [sh.Hot('--AB|')])
       )
       sh.advanceTo(202)
       const div210 = node(results)
@@ -112,11 +116,8 @@ describe('HTMLElementObservable', () => {
     })
     it('should update text (number) without create a new span', () => {
       const sh = createTestScheduler()
-      const {results} = sh.subscribeTo(
-        () =>
-          new HTMLElementObservable('div.a', {}, [
-            sh.Hot(EVENT.next(202, 1), EVENT.next(203, 2))
-          ])
+      const {results} = sh.subscribeTo(() =>
+        elm('div.a', {}, [sh.Hot(EVENT.next(202, 1), EVENT.next(203, 2))])
       )
       sh.advanceTo(202)
       const div210 = node(results)
@@ -133,9 +134,7 @@ describe('HTMLElementObservable', () => {
     })
     it('should create elements with empty string', () => {
       const sh = createTestScheduler()
-      const {results} = sh.start(
-        () => new HTMLElementObservable('div.wonky', {}, [O.of('')])
-      )
+      const {results} = sh.start(() => elm('div.wonky', {}, [O.of('')]))
       const expected = [
         EVENT.next(201, html(`<div class="wonky"></div>`)),
         EVENT.complete(201)
@@ -150,9 +149,7 @@ describe('HTMLElementObservable', () => {
         EVENT.next(214, html(`<h1><span>No Air</span></h1>`)),
         EVENT.complete(215)
       )
-      const {results} = sh.subscribeTo(
-        () => new HTMLElementObservable('div.wonky', {}, [child$])
-      )
+      const {results} = sh.subscribeTo(() => elm('div.wonky', {}, [child$]))
 
       assert.deepEqual(node(results), null)
       sh.advanceTo(212)
@@ -171,31 +168,26 @@ describe('HTMLElementObservable', () => {
       )
     })
   })
-
   it('should create a new HTMLElement', () => {
     const sh = createTestScheduler()
-    const {results} = sh.start(
-      () => new HTMLElementObservable('div.a', {}, [O.of('XXX')])
-    )
+    const {results} = sh.start(() => elm('div.a', {}, [O.of('XXX')]))
     const expected = [
       EVENT.next(201, html(`<div class="a"><span>XXX</span></div>`)),
       EVENT.complete(201)
     ]
     assert.deepEqual(results, expected)
   })
-
   describe('style$', () => {
     it('should set style$', () => {
       const sh = createTestScheduler()
-      const {results} = sh.start(
-        () =>
-          new HTMLElementObservable(
-            'div.a',
-            {
-              style: O.of({transform: 'translateX(10px)'})
-            },
-            [O.of('A')]
-          )
+      const {results} = sh.start(() =>
+        elm(
+          'div.a',
+          {
+            style: O.of({transform: 'translateX(10px)'})
+          },
+          [O.of('A')]
+        )
       )
       const htmlString = `<div class="a" style="transform: translateX(10px);"><span>A</span></div>`
       const expected = [EVENT.next(201, html(htmlString)), EVENT.complete(201)]
@@ -206,9 +198,7 @@ describe('HTMLElementObservable', () => {
       const sh = createTestScheduler()
       const style$ = sh.Hot([EVENT.next(2100, {transform: 'translateX(10px)'})])
 
-      sh.start(
-        () => new HTMLElementObservable('div.a', {style: style$}, [O.of('A')])
-      )
+      sh.start(() => elm('div.a', {style: style$}, [O.of('A')]))
       const actual = style$.subscriptions
       const subscription = <EventStart>style$.subscriptions[0]
       const expected = [
@@ -221,15 +211,14 @@ describe('HTMLElementObservable', () => {
   describe('attrs$', () => {
     it('should set attr$', () => {
       const sh = createTestScheduler()
-      const {results} = sh.start(
-        () =>
-          new HTMLElementObservable(
-            'a',
-            {
-              attrs: O.of({href: '/home.html'})
-            },
-            [O.of('A')]
-          )
+      const {results} = sh.start(() =>
+        elm(
+          'a',
+          {
+            attrs: O.of({href: '/home.html'})
+          },
+          [O.of('A')]
+        )
       )
       const htmlString = `<a href="/home.html"><span>A</span></a>`
       const expected = [EVENT.next(201, html(htmlString)), EVENT.complete(201)]
@@ -239,15 +228,14 @@ describe('HTMLElementObservable', () => {
     it('should unsubscribe from style$', () => {
       const sh = createTestScheduler()
       const attrs$ = sh.Hot(EVENT.next(2010, {href: '/home.html'}))
-      sh.start(
-        () =>
-          new HTMLElementObservable(
-            'a',
-            {
-              attrs: attrs$
-            },
-            [O.of('A')]
-          )
+      sh.start(() =>
+        elm(
+          'a',
+          {
+            attrs: attrs$
+          },
+          [O.of('A')]
+        )
       )
       const actual = attrs$.subscriptions
       const subscription = <EventStart>attrs$.subscriptions[0]
@@ -258,28 +246,24 @@ describe('HTMLElementObservable', () => {
       assert.deepEqual(actual, expected)
     })
   })
-
   describe('props$', () => {
     it('should set props$', () => {
       const sh = createTestScheduler()
-      const {results} = sh.start(
-        () =>
-          new HTMLElementObservable(
-            'div',
-            {
-              props: O.of({isWonky: true})
-            },
-            [O.of('A')]
-          )
+      const {results} = sh.start(() =>
+        elm(
+          'div',
+          {
+            props: O.of({isWonky: true})
+          },
+          [O.of('A')]
+        )
       )
       assert.isTrue(node(results).isWonky)
     })
     it('should unsubscribe from style$', () => {
       const sh = createTestScheduler()
       const props$ = sh.Hot([EVENT.next(2100, {})])
-      sh.start(
-        () => new HTMLElementObservable('div.a', {props: props$}, [O.of('A')])
-      )
+      sh.start(() => elm('div.a', {props: props$}, [O.of('A')]))
       const actual = props$.subscriptions
       const subscription = <EventStart>props$.subscriptions[0]
       const expected = [
