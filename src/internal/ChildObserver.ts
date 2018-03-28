@@ -1,5 +1,5 @@
 import {NodeInternalData, NodeWithId} from '../HTMLElementObservable'
-import {IObserver, IScheduler, ISubscription} from 'observable-air'
+import {CompositeSubscription, IObserver, IScheduler} from 'observable-air'
 import {createElement} from './createElement'
 import {NodeDataObserver} from './NodeDataObserver'
 import {updateAttrs} from './updateAttributes'
@@ -8,26 +8,24 @@ import {toNode} from './toNode'
 import {updateProps} from './updateProps'
 import {isHTMLElement} from './isHTMLElement'
 
-export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
+export class ChildObserver implements IObserver<NodeWithId> {
   // child positions
-  public closed = false
   private readonly pos = new Set<number>()
   public readonly elm: HTMLElement
   private started = false
-  private subs: Array<ISubscription> = []
 
   constructor(
     selector: string,
     private nodeData: NodeInternalData,
     private sink: IObserver<HTMLElement>,
-    private sch: IScheduler
+    private sch: IScheduler,
+    private cSub: CompositeSubscription
   ) {
     this.elm = createElement(selector)
   }
 
   complete(): void {
     this.sink.complete()
-    this.closed = true
   }
 
   error(err: Error): void {
@@ -52,7 +50,7 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
     const props: any = this.nodeData
     for (var i in props) {
       const observer = new NodeDataObserver(this.elm, this.sink, P[i])
-      this.subs.push(props[i].subscribe(observer, this.sch))
+      this.cSub.add(props[i].subscribe(observer, this.sch))
     }
   }
 
@@ -102,12 +100,5 @@ export class ChildObserver implements IObserver<NodeWithId>, ISubscription {
       // update position
       this.pos.add(child.id)
     }
-  }
-
-  unsubscribe() {
-    for (var i = 0; i < this.subs.length; i++) {
-      this.subs[i].unsubscribe()
-    }
-    this.closed = true
   }
 }

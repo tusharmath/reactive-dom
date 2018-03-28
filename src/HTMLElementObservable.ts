@@ -1,6 +1,7 @@
 import * as O from 'observable-air'
 import {IObservable, IObserver, IScheduler, ISubscription} from 'observable-air'
 import {ChildObserver} from './internal/ChildObserver'
+import {CompositeSubscription} from 'observable-air/src/internal/Subscription'
 
 export type Optional<T> = {[P in keyof T]?: T[P]}
 export interface NodeInternalData {
@@ -10,18 +11,6 @@ export interface NodeInternalData {
 }
 export type ReactiveElement = HTMLElement | string | number
 export type NodeWithId = {node: ReactiveElement; id: number}
-
-class DomStreamSubscription implements ISubscription {
-  constructor(private subs: Array<ISubscription>) {}
-  closed = false
-
-  unsubscribe(): void {
-    for (var i = 0; i < this.subs.length; i++) {
-      this.subs[i].unsubscribe()
-    }
-    this.closed = true
-  }
-}
 
 export class HTMLElementObservable implements IObservable<HTMLElement> {
   constructor(
@@ -33,20 +22,18 @@ export class HTMLElementObservable implements IObservable<HTMLElement> {
     observer: IObserver<HTMLElement>,
     scheduler: IScheduler
   ): ISubscription {
-    const childObserver = new ChildObserver(
-      this.sel,
-      this.props,
-      observer,
-      scheduler
-    )
-    const cSub: Array<ISubscription> = [
-      childObserver,
+    const cSub = new CompositeSubscription()
+    cSub.add(
       O.merge(
         ...this.children.map((child$, id) =>
           O.map(node => ({id, node}), child$)
         )
-      ).subscribe(childObserver, scheduler)
-    ]
-    return new DomStreamSubscription(cSub)
+      ).subscribe(
+        new ChildObserver(this.sel, this.props, observer, scheduler, cSub),
+        scheduler
+      )
+    )
+
+    return cSub
   }
 }
