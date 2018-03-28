@@ -28,7 +28,7 @@ describe('h', () => {
     })
   })
   describe('append$', () => {
-    it('should insert an element at a location', () => {
+    it('should append the node', () => {
       const SH = createTestScheduler()
       const append$ = O.delay(10, h('h1', ['X']))
       const view$ = h('div', {append: append$}, [
