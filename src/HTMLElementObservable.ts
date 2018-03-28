@@ -42,4 +42,4 @@ export const elm = (
   sel: string,
   prop: NodeInternalData,
   children: Array<IObservable<ReactiveElement>>
-) => new HTMLElementObservable(sel, prop, children)
+): IObservable<HTMLElement> => new HTMLElementObservable(sel, prop, children)
