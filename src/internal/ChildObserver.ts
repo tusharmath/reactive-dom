@@ -1,4 +1,8 @@
-import {NodeInternalData, NodeWithId} from './HTMLElementObservable'
+import {
+  NodeInternalData,
+  NodeWithId,
+  ReactiveElement
+} from './HTMLElementObservable'
 import * as O from 'observable-air'
 import {CompositeSubscription, IObserver, IScheduler} from 'observable-air'
 import {createElement} from './createElement'
@@ -65,8 +69,8 @@ export class ChildObserver implements IObserver<NodeWithId> {
     Object.assign(this.elm, props)
   }
 
-  private onAppend(child: HTMLElement) {
-    this.elm.appendChild(child)
+  private onAppend(child: ReactiveElement) {
+    this.elm.appendChild(toNode(child))
   }
 
   private attachMeta$() {

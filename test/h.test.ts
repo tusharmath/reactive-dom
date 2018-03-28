@@ -54,6 +54,24 @@ describe('h', () => {
         EVENT.complete(201)
       ])
     })
+
+    it('should append the text', () => {
+      const SH = createTestScheduler()
+      const append$ = O.of('X')
+      const view$ = h('div', {append: append$}, [
+        h('h1', ['A']),
+        h('h1', ['B'])
+      ])
+      const {results} = SH.start(() => view$)
+      const output201 = html(
+        `<div><h1><span>A</span></h1><h1><span>B</span></h1><span>X</span></div>`
+      )
+      console.log(results)
+      assert.deepEqual(results, [
+        EVENT.next(201, output201),
+        EVENT.complete(201)
+      ])
+    })
   })
   describe('children[]', () => {
     it('should attach child HTMLElement', () => {

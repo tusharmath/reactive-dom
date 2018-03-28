@@ -16,7 +16,7 @@ export interface NodeData {
     | IObservable<Optional<CSSStyleDeclaration>>
   attrs?: {[key: string]: string} | IObservable<{[key: string]: string}>
   props?: {[key: string]: any} | IObservable<{[key: string]: any}>
-  append?: IObservable<HTMLElement>
+  append?: IObservable<ReactiveElement>
 }
 const toStream = (i: any) =>
   typeof i.subscribe === 'function' ? i : O.of(i.toString())
