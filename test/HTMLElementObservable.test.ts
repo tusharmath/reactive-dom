@@ -1,22 +1,12 @@
 import * as O from 'observable-air'
 import {createTestScheduler, EVENT} from 'observable-air/test'
-import {
-  HTMLElementObservable,
-  NodeInternalData,
-  ReactiveElement
-} from '../src/HTMLElementObservable'
 import {assert} from 'chai'
 import {html} from '../src/internal/html'
 import {EventStart} from 'observable-air/src/internal/Events'
-import {IObservable} from 'observable-air'
+import {elm} from '../src/HTMLElementObservable'
 
 const node = (results: any[]) => (results[0] ? results[0].value : null)
 describe('HTMLElementObservable', () => {
-  const elm = (
-    sel: string,
-    prop: NodeInternalData,
-    children: Array<IObservable<ReactiveElement>>
-  ) => new HTMLElementObservable(sel, prop, children)
   describe('children', () => {
     it('should attach child HTMLElement', () => {
       const sh = createTestScheduler()

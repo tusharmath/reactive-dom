@@ -12,7 +12,7 @@ export interface NodeInternalData {
 export type ReactiveElement = HTMLElement | string | number
 export type NodeWithId = {node: ReactiveElement; id: number}
 
-export class HTMLElementObservable implements IObservable<HTMLElement> {
+class HTMLElementObservable implements IObservable<HTMLElement> {
   constructor(
     private sel: string,
     private props: NodeInternalData,
@@ -37,3 +37,9 @@ export class HTMLElementObservable implements IObservable<HTMLElement> {
     return cSub
   }
 }
+
+export const elm = (
+  sel: string,
+  prop: NodeInternalData,
+  children: Array<IObservable<ReactiveElement>>
+) => new HTMLElementObservable(sel, prop, children)
