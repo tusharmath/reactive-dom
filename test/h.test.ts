@@ -66,7 +66,6 @@ describe('h', () => {
       const output201 = html(
         `<div><h1><span>A</span></h1><h1><span>B</span></h1><span>X</span></div>`
       )
-      console.log(results)
       assert.deepEqual(results, [
         EVENT.next(201, output201),
         EVENT.complete(201)

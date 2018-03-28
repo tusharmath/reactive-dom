@@ -69,8 +69,8 @@ export class ChildObserver implements IObserver<NodeWithId> {
     Object.assign(this.elm, props)
   }
 
-  private onAppend(child: ReactiveElement) {
-    this.elm.appendChild(toNode(child))
+  private onAppend(node: ReactiveElement) {
+    this.insert({node, id: -1})
   }
 
   private attachMeta$() {
@@ -91,8 +91,9 @@ export class ChildObserver implements IObserver<NodeWithId> {
 
   private canInsert(child: NodeWithId) {
     return (
-      (this.pos.has(child.id) && isHTMLElement(child.node)) ||
-      !this.pos.has(child.id)
+      child.node !== '' &&
+      ((this.pos.has(child.id) && isHTMLElement(child.node)) ||
+        !this.pos.has(child.id))
     )
   }
 
@@ -124,15 +125,13 @@ export class ChildObserver implements IObserver<NodeWithId> {
   }
 
   private insert(child: NodeWithId) {
-    if (child.node !== '') {
-      const newChild = toNode(child.node)
-      const htmlElement = this.elm
-      if (htmlElement.childNodes.length > child.id) {
-        htmlElement.insertBefore(newChild, htmlElement.childNodes[child.id])
-      } else {
-        htmlElement.appendChild(newChild)
-      }
-      this.pos.add(child.id)
+    const newChild = toNode(child.node)
+    const htmlElement = this.elm
+    if (child.id > -1 && htmlElement.childNodes.length > child.id) {
+      htmlElement.insertBefore(newChild, htmlElement.childNodes[child.id])
+    } else {
+      htmlElement.appendChild(newChild)
     }
+    this.pos.add(child.id)
   }
 }
