@@ -21,7 +21,7 @@ export type NodeWithId = {node: ReactiveElement; id: number}
 export class HTMLElementObservable implements IObservable<HTMLElement> {
   constructor(
     private sel: string,
-    private props: NodeInternalData,
+    private data: NodeInternalData,
     private children: Array<IObservable<ReactiveElement>>
   ) {}
   subscribe(
@@ -30,12 +30,13 @@ export class HTMLElementObservable implements IObservable<HTMLElement> {
   ): ISubscription {
     const cSub = new CompositeSubscription()
     cSub.add(
+      // use combine instead of merge
       O.merge(
         ...this.children.map((child$, id) =>
           O.map(node => ({id, node}), child$)
         )
       ).subscribe(
-        new ChildObserver(this.sel, this.props, observer, scheduler, cSub),
+        new ChildObserver(this.sel, this.data, observer, scheduler, cSub),
         scheduler
       )
     )
