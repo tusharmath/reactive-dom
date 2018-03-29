@@ -1,45 +1,51 @@
 import * as O from 'observable-air'
+import {IObservable, IObserver, IScheduler, ISubscription} from 'observable-air'
 import {
-  CompositeSubscription,
-  IObservable,
-  IObserver,
-  IScheduler,
-  ISubscription
-} from 'observable-air'
-import {ChildObserver} from './ChildObserver'
+  ChildObserver,
+  DomMutationObject,
+  MutationType,
+  NodeInternalData,
+  NodeWithId,
+  Optional,
+  ReactiveElement
+} from './ChildObserver'
 
-export type Optional<T> = {[P in keyof T]?: T[P]}
-export interface NodeInternalData {
-  style?: IObservable<Optional<CSSStyleDeclaration>>
-  attrs?: IObservable<{[key: string]: string}>
-  props?: IObservable<{[key: string]: any}>
-  append?: IObservable<HTMLElement>
+const TRANSFORMERS: {
+  [T in keyof NodeInternalData]: (p: any) => DomMutationObject<any>
+} = {
+  attrs: (params: Object) => ({params, type: MutationType.ATTRS}),
+  insertAt: (params: NodeWithId) => ({params, type: MutationType.INSERT_AT}),
+  props: (params: Object) => ({params, type: MutationType.PROPS}),
+  removeAt: (params: number) => ({params, type: MutationType.REMOVE_AT}),
+  style: (params: Optional<CSSStyleDeclaration>) => ({
+    params,
+    type: MutationType.STYLE
+  }),
+  text: (params: string | number) => ({params, type: MutationType.UPDATE_TEXT}),
+  append: (params: ReactiveElement) => ({params, type: MutationType.APPEND}),
+  replaceAt: (params: NodeWithId) => ({params, type: MutationType.REPLACE_AT})
 }
-export type ReactiveElement = HTMLElement | string | number
-export type NodeWithId = {node: ReactiveElement; id: number}
 
+/**
+ * Low level API for making DOM mutations
+ */
 export class HTMLElementObservable implements IObservable<HTMLElement> {
-  constructor(
-    private sel: string,
-    private data: NodeInternalData,
-    private children: Array<IObservable<ReactiveElement>>
-  ) {}
+  constructor(private sel: string, private data: NodeInternalData) {}
   subscribe(
     observer: IObserver<HTMLElement>,
     scheduler: IScheduler
   ): ISubscription {
-    const cSub = new CompositeSubscription()
-    cSub.add(
-      // use combine instead of merge
-      O.merge(
-        ...this.children.map((child$, id) =>
-          O.map(node => ({id, node}), child$)
-        )
-      ).subscribe(
-        new ChildObserver(this.sel, this.data, observer, scheduler, cSub),
-        scheduler
-      )
+    const dmo = []
+
+    for (var i in this.data) {
+      if (this.data.hasOwnProperty(i)) {
+        dmo.push(O.map((<any>TRANSFORMERS)[i], (<any>this.data)[i]))
+      }
+    }
+
+    return O.merge(...dmo).subscribe(
+      new ChildObserver(this.sel, this.data, observer),
+      scheduler
     )
-    return cSub
   }
 }
