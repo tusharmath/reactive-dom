@@ -1,10 +1,10 @@
+import * as O from 'observable-air'
+import {IObservable} from 'observable-air'
 import {
   HTMLElementObservable,
   Optional,
   ReactiveElement
 } from './internal/HTMLElementObservable'
-import * as O from 'observable-air'
-import {IObservable} from 'observable-air'
 
 export type ReactiveChildren = Array<
   IObservable<ReactiveElement> | ReactiveElement

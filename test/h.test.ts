@@ -1,9 +1,9 @@
-import {createTestScheduler, EVENT} from 'observable-air/test'
-import {h} from '../src/h'
 import {assert} from 'chai'
-import {html} from '../src/internal/html'
 import * as O from 'observable-air'
 import {EventStart} from 'observable-air/src/internal/Events'
+import {createTestScheduler, EVENT} from 'observable-air/test'
+import {h} from '../src/h'
+import {html} from '../src/internal/html'
 
 describe('h', () => {
   const node = (results: any[]) => (results[0] ? results[0].value : null)
@@ -54,7 +54,6 @@ describe('h', () => {
         EVENT.complete(201)
       ])
     })
-
     it('should append the text', () => {
       const SH = createTestScheduler()
       const append$ = O.of('X')

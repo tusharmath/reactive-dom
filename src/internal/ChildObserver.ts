@@ -1,13 +1,13 @@
+import * as O from 'observable-air'
+import {CompositeSubscription, IObserver, IScheduler} from 'observable-air'
+import {createElement} from './createElement'
 import {
   NodeInternalData,
   NodeWithId,
   ReactiveElement
 } from './HTMLElementObservable'
-import * as O from 'observable-air'
-import {CompositeSubscription, IObserver, IScheduler} from 'observable-air'
-import {createElement} from './createElement'
-import {toNode} from './toNode'
 import {isHTMLElement} from './isHTMLElement'
+import {toNode} from './toNode'
 
 export class ChildObserver implements IObserver<NodeWithId> {
   // child positions

@@ -8,7 +8,7 @@
     "prettier": "git ls-files | grep '.ts$' | xargs prettier --write --config=.prettierrc",
     "semantic-release": "semantic-release",
     "test": "karma start karma.config.js --single-run",
-    "lint": "git ls-files | grep *.ts | xargs tslint --fix",
+    "lint": "git ls-files | grep .ts | xargs tslint --fix",
     "test:watch": "karma start karma.config.js --browsers=ChromeHeadless",
     "travis-deploy-once": "travis-deploy-once"
   },
