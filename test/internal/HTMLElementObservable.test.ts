@@ -48,6 +48,17 @@ describe('HTMLElementObservable', () => {
       )
       assert.deepEqual(results, [EVENT.next(210, htmlStringOutput)])
     })
+
+    it('should insert [input] elements without waiting', () => {
+      const SH = createTestScheduler()
+      const view$ = new HTMLElementObservable('input', {
+      })
+      const {results} = SH.start(() => view$)
+      const htmlStringOutput = html(
+        `<input/>`
+      )
+      assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
+    })
   })
 
   describe('attrs$', () => {

@@ -38,6 +38,7 @@ export class ChildObserver implements IObserver<DomMutationObject<any>> {
     private sink: IObserver<HTMLElement>
   ) {
     this.elm = createElement(selector)
+    this.dispatchNode()
   }
 
   complete(): void {
@@ -75,7 +76,14 @@ export class ChildObserver implements IObserver<DomMutationObject<any>> {
         this.replaceAt(mutation.params)
         break
     }
-    if (!this.started && this.elm.childNodes.length > 0) {
+    this.dispatchNode()
+  }
+
+  private dispatchNode() {
+    if (
+      (!this.started && this.elm.childNodes.length > 0) ||
+      this.elm.nodeName === 'INPUT'
+    ) {
       this.sink.next(this.elm)
       this.started = true
     }
