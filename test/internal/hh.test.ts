@@ -5,8 +5,8 @@
 import {assert} from 'chai'
 import {createTestScheduler, EVENT} from 'observable-air/test'
 import {NodeWithId} from '../../src/internal/ChildObserver'
+import {hh} from '../../src/internal/hh'
 import {html} from '../../src/internal/html'
-import {HTMLElementObservable} from '../../src/internal/HTMLElementObservable'
 import {node} from '../../src/internal/node'
 
 describe('HTMLElementObservable', () => {
@@ -21,7 +21,7 @@ describe('HTMLElementObservable', () => {
         EVENT.next(212, {id: 1, node: html(htmlString212)}),
         EVENT.next(213, {id: 0, node: html(htmlString213)})
       ])
-      const view$ = new HTMLElementObservable('div.container', {
+      const view$ = hh('div.container', {
         insertAt: insertAt$
       })
       const {results} = SH.start(() => view$)
@@ -39,7 +39,7 @@ describe('HTMLElementObservable', () => {
         EVENT.next(210, 'HOME'),
         EVENT.next(212, 'ALONE')
       ])
-      const view$ = new HTMLElementObservable('div', {
+      const view$ = hh('div', {
         append: children$
       })
       const {results} = SH.start(() => view$)
@@ -51,12 +51,9 @@ describe('HTMLElementObservable', () => {
 
     it('should insert [input] elements without waiting', () => {
       const SH = createTestScheduler()
-      const view$ = new HTMLElementObservable('input', {
-      })
+      const view$ = hh('input', {})
       const {results} = SH.start(() => view$)
-      const htmlStringOutput = html(
-        `<input/>`
-      )
+      const htmlStringOutput = html(`<input/>`)
       assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
   })
@@ -66,7 +63,7 @@ describe('HTMLElementObservable', () => {
       const SH = createTestScheduler()
       const attrs$ = SH.Hot([EVENT.next(204, {href: '/home.html'})])
       const children$ = SH.Hot([EVENT.next(210, 'HOME')])
-      const view$ = new HTMLElementObservable('a.link', {
+      const view$ = hh('a.link', {
         attrs: attrs$,
         append: children$
       })
@@ -83,7 +80,7 @@ describe('HTMLElementObservable', () => {
       const SH = createTestScheduler()
       const style$ = SH.Hot([EVENT.next(204, {color: 'red'})])
       const children$ = SH.Hot([EVENT.next(210, 'CHILD')])
-      const view$ = new HTMLElementObservable('div', {
+      const view$ = hh('div', {
         style: style$,
         append: children$
       })
@@ -105,7 +102,7 @@ describe('HTMLElementObservable', () => {
         EVENT.next(212, 'C'),
         EVENT.next(213, 'D')
       ])
-      const view$ = new HTMLElementObservable('div', {
+      const view$ = hh('div', {
         append: children$,
         removeAt: removeAt$
       })
@@ -126,7 +123,7 @@ describe('HTMLElementObservable', () => {
         EVENT.next(212, 'C'),
         EVENT.next(213, 'D')
       ])
-      const view$ = new HTMLElementObservable('div', {
+      const view$ = hh('div', {
         text: text$
       })
       const {results} = SH.start(() => view$)
@@ -139,7 +136,7 @@ describe('HTMLElementObservable', () => {
     it('should set internal props', () => {
       const SH = createTestScheduler()
       const props$ = SH.Hot([EVENT.next(210, {fruit: 'grapes'})])
-      const view$ = new HTMLElementObservable('div', {
+      const view$ = hh('div', {
         props: props$,
         text: SH.Hot([EVENT.next(201, 'A')])
       })
@@ -161,7 +158,7 @@ describe('HTMLElementObservable', () => {
         EVENT.next(212, 'C'),
         EVENT.next(213, 'D')
       ])
-      const view$ = new HTMLElementObservable('div', {
+      const view$ = hh('div', {
         append: append$,
         replaceAt: replaceAt$
       })

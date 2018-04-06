@@ -29,7 +29,7 @@ const TRANSFORMERS: {
 /**
  * Low level API for making DOM mutations
  */
-export class HTMLElementObservable implements IObservable<HTMLElement> {
+class HH implements IObservable<HTMLElement> {
   constructor(private sel: string, private data: NodeInternalData) {}
   subscribe(
     observer: IObserver<HTMLElement>,
@@ -49,3 +49,5 @@ export class HTMLElementObservable implements IObservable<HTMLElement> {
     )
   }
 }
+
+export const hh = (sel: string, data: NodeInternalData) => new HH(sel, data)
