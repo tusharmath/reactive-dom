@@ -30,7 +30,6 @@ export enum MutationType {
 
 export class ChildObserver implements IObserver<DomMutationObject<any>> {
   public readonly elm: HTMLElement
-  private started = false
 
   constructor(
     selector: string,

@@ -1,9 +1,4 @@
 import {ReactiveElement} from './ChildObserver'
-import {createElement} from './createElement'
 
-export const toNode = (el: ReactiveElement) => {
-  if (el instanceof Node) return el
-  const node = createElement('span')
-  node.textContent = el.toString()
-  return node
-}
+export const toNode = (el: ReactiveElement) =>
+  el instanceof Node ? el : document.createTextNode(el.toString())

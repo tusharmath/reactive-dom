@@ -36,8 +36,8 @@ describe('HTMLElementObservable', () => {
     it('should insert at the end', () => {
       const SH = createTestScheduler()
       const children$ = SH.Hot([
-        EVENT.next(210, 'HOME'),
-        EVENT.next(212, 'ALONE')
+        EVENT.next(210, html('<span>HOME</span>')),
+        EVENT.next(212, html('<span>ALONE</span>'))
       ])
       const view$ = hh('div', {
         append: children$
@@ -69,7 +69,7 @@ describe('HTMLElementObservable', () => {
       })
       const {results} = SH.start(() => view$)
       const htmlStringOutput = html(
-        `<a class="link" href="/home.html"><span>HOME</span></a>`
+        `<a class="link" href="/home.html">HOME</a>`
       )
       assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
@@ -85,9 +85,7 @@ describe('HTMLElementObservable', () => {
         append: children$
       })
       const {results} = SH.start(() => view$)
-      const htmlStringOutput = html(
-        ` <div style="color: red;"><span>CHILD</span></div>`
-      )
+      const htmlStringOutput = html(` <div style="color: red;">CHILD</div>`)
       assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
   })
@@ -97,10 +95,10 @@ describe('HTMLElementObservable', () => {
       const SH = createTestScheduler()
       const removeAt$ = SH.Hot([EVENT.next(225, 2)])
       const children$ = SH.Hot([
-        EVENT.next(210, 'A'),
-        EVENT.next(211, 'B'),
-        EVENT.next(212, 'C'),
-        EVENT.next(213, 'D')
+        EVENT.next(210, html('<span>A</span>')),
+        EVENT.next(211, html('<span>B</span>')),
+        EVENT.next(212, html('<span>C</span>')),
+        EVENT.next(213, html('<span>D</span>'))
       ])
       const view$ = hh('div', {
         append: children$,
@@ -151,12 +149,14 @@ describe('HTMLElementObservable', () => {
   describe('replaceAt$', () => {
     it('should replace the element at a position', () => {
       const SH = createTestScheduler()
-      const replaceAt$ = SH.Hot([EVENT.next(225, {id: 2, node: 'X'})])
+      const replaceAt$ = SH.Hot([
+        EVENT.next(225, {id: 2, node: html('<span>X</span>')})
+      ])
       const append$ = SH.Hot([
-        EVENT.next(210, 'A'),
-        EVENT.next(211, 'B'),
-        EVENT.next(212, 'C'),
-        EVENT.next(213, 'D')
+        EVENT.next(210, html('<span>A</span>')),
+        EVENT.next(211, html('<span>B</span>')),
+        EVENT.next(212, html('<span>C</span>')),
+        EVENT.next(213, html('<span>D</span>'))
       ])
       const view$ = hh('div', {
         append: append$,
