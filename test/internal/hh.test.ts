@@ -4,8 +4,7 @@
 
 import {assert} from 'chai'
 import {createTestScheduler, EVENT} from 'observable-air/test'
-import {NodeWithId} from '../../src/internal/ChildObserver'
-import {hh} from '../../src/internal/hh'
+import {hh, NodeWithId} from '../../src/internal/hh'
 import {html} from '../../src/internal/html'
 import {node} from '../../src/internal/node'
 
