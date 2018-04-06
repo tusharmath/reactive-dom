@@ -5,28 +5,95 @@
 /* global O */
 'use strict'
 
-const {h} = O.dom
-const timer$ = O.scan(i => i + 1, 0, O.interval(100))
+const {hh} = O.dom
 
-const baseStyle = {
-  backgroundColor: 'red',
-  height: '100px',
-  width: '100px'
-}
+const event$ = i => O.multicast(O.fromDOM(document, i))
+const enter$ = O.filter(i => i.key === 'Enter', event$('keypress'))
+const text$ = O.multicast(
+  O.scan(
+    (m, n) => ({id: m.id + 1, text: n}),
+    {id: -1},
+    O.map(i => i.target.value, enter$)
+  )
+)
+const destroy$ = O.map(
+  i => Number(i.target.dataset.id),
+  O.filter(i => i.target.matches('.destroy'), event$('click'))
+)
 
-const addTransform = i => ({
-  ...baseStyle,
-  transform: `translateX(${i}px)`,
-  opacity: `${i / 100}`
+// O.forEach(console.log, destroy$)
+
+const footer$ = hh('footer.info', {
+  append: O.merge(
+    hh('p', {append: O.of('Double-click to edit a todo')}),
+    hh('p', {
+      append: O.merge(
+        O.of('Written by '),
+        hh('a', {
+          props: O.of({href: 'https://github.com/tusharmath'}),
+          append: O.of('Tushar Mathur')
+        })
+      )
+    }),
+    hh('p', {
+      append: O.merge(
+        O.of('Part of '),
+        hh('a', {
+          props: O.of({href: 'http://todomvc.com'}),
+          append: O.of('TodoMVC')
+        })
+      )
+    })
+  )
 })
-const rectStyle$ = O.map(addTransform, timer$)
-
-const view$ = h('div', [
-  h('h1', ['Fenil']),
-  h('p', [timer$]),
-  h('div', {
-    style: rectStyle$
+const todoList$ = O.flatMap(({text, id}) => {
+  return hh('li', {
+    append: O.merge(
+      hh('input.toggle', {
+        props: O.of({type: 'checkbox'})
+      }),
+      hh('label', {
+        append: O.of(text.toString())
+      }),
+      hh('button.destroy', {
+        attrs: O.of({
+          ['data-id']: id
+        })
+      })
+    )
   })
-])
+}, text$)
 
-O.forEach(i => document.body.appendChild(i), view$)
+const view$ = hh('div', {
+  append: O.merge(
+    hh('section.todoapp', {
+      append: O.merge(
+        hh('header.header', {
+          append: O.merge(
+            hh('h1', {
+              append: O.merge(O.of('todos'))
+            }),
+            hh('input.new-todo', {
+              props: O.merge(
+                O.of({placeholder: 'What needs to be done?'}),
+                O.mapTo({value: ''}, text$)
+              )
+            })
+          )
+        }),
+        hh('section.main', {
+          append: O.merge(
+            hh('ul.todo-list', {
+              append: todoList$,
+              removeAt: destroy$
+            })
+          )
+        })
+      )
+    }),
+    footer$
+  )
+})
+document.addEventListener('DOMContentLoaded', () => {
+  O.forEach(i => document.body.appendChild(i), view$)
+})
