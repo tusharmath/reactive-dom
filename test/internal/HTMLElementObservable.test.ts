@@ -28,7 +28,7 @@ describe('HTMLElementObservable', () => {
       const htmlStringOutput = html(
         `<div class="container"><div>213</div><div>210</div><div>212</div></div>`
       )
-      assert.deepEqual(results, [EVENT.next(210, htmlStringOutput)])
+      assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
   })
 
@@ -46,7 +46,7 @@ describe('HTMLElementObservable', () => {
       const htmlStringOutput = html(
         `<div><span>HOME</span><span>ALONE</span></div>`
       )
-      assert.deepEqual(results, [EVENT.next(210, htmlStringOutput)])
+      assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
 
     it('should insert [input] elements without waiting', () => {
@@ -74,7 +74,7 @@ describe('HTMLElementObservable', () => {
       const htmlStringOutput = html(
         `<a class="link" href="/home.html"><span>HOME</span></a>`
       )
-      assert.deepEqual(results, [EVENT.next(210, htmlStringOutput)])
+      assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
   })
 
@@ -91,7 +91,7 @@ describe('HTMLElementObservable', () => {
       const htmlStringOutput = html(
         ` <div style="color: red;"><span>CHILD</span></div>`
       )
-      assert.deepEqual(results, [EVENT.next(210, htmlStringOutput)])
+      assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
   })
 
@@ -113,7 +113,7 @@ describe('HTMLElementObservable', () => {
       const htmlStringOutput = html(
         `<div><span>A</span><span>B</span><span>D</span></div>`
       )
-      assert.deepEqual(results, [EVENT.next(210, htmlStringOutput)])
+      assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
   })
 
@@ -131,7 +131,7 @@ describe('HTMLElementObservable', () => {
       })
       const {results} = SH.start(() => view$)
       const htmlStringOutput = html(`<div>D</div>`)
-      assert.deepEqual(results, [EVENT.next(210, htmlStringOutput)])
+      assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
   })
 
@@ -146,7 +146,7 @@ describe('HTMLElementObservable', () => {
       const {results} = SH.start(() => view$)
       const htmlStringOutput = html(`<div>A</div>`) as any
       htmlStringOutput['fruit'] = 'grapes'
-      assert.deepEqual(results, [EVENT.next(201, htmlStringOutput)])
+      assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
       assert.strictEqual(node(results).fruit, 'grapes')
     })
   })
@@ -169,7 +169,7 @@ describe('HTMLElementObservable', () => {
       const htmlStringOutput = html(
         `<div><span>A</span><span>B</span><span>X</span><span>D</span></div>`
       )
-      assert.deepEqual(results, [EVENT.next(210, htmlStringOutput)])
+      assert.deepEqual(results, [EVENT.next(200, htmlStringOutput)])
     })
   })
 })
