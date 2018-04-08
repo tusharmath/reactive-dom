@@ -13,11 +13,11 @@ enum MutationType {
   STYLE,
   UPDATE_TEXT
 }
-type NodeWithId = {node: ReactiveElement; id: number}
-type DomMutationObject<T> = {type: MutationType; params: T}
-type Optional<T> = {[P in keyof T]?: T[P]}
-type ReactiveElement = HTMLElement | string | number
-type NodeInternalData = {
+export type NodeWithId = {node: ReactiveElement; id: number}
+export type DomMutationObject<T> = {type: MutationType; params: T}
+export type Optional<T> = {[P in keyof T]?: T[P]}
+export type ReactiveElement = HTMLElement | string | number
+export type NodeInternalData = {
   append?: IObservable<ReactiveElement>
   attrs?: IObservable<{[key: string]: string}>
   insertAt?: IObservable<NodeWithId>
