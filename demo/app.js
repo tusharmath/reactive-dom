@@ -13,17 +13,25 @@ const text$ = O.multicast(
   O.scan(
     (m, n) => ({id: m.id + 1, text: n}),
     {id: -1},
-    O.map(i => i.target.value, enter$)
+    O.filter(i => i !== '', O.map(i => i.target.value, enter$))
   )
 )
-const destroy$ = O.map(
-  i => Number(i.target.dataset.id),
-  O.filter(i => i.target.matches('.destroy'), event$('click'))
+const destroy$ = O.map(i => {
+  const target = i.target
+  const node = document.getElementById(target.dataset.id)
+  const id = Array.from(node.parentNode.childNodes).indexOf(node)
+  console.log({node, id})
+  return id
+}, O.filter(i => i.target.matches('.destroy'), event$('click')))
+const count$ = O.scan(
+  (a, b) => a + b,
+  0,
+  O.merge(O.mapTo(1, text$), O.mapTo(-1, destroy$))
 )
 
 // O.forEach(console.log, destroy$)
 
-const footer$ = hh('footer.info', {
+const pageFooter$ = hh('footer.info', {
   append: O.merge(
     hh('p', {append: O.of('Double-click to edit a todo')}),
     hh('p', {
@@ -48,6 +56,7 @@ const footer$ = hh('footer.info', {
 })
 const todoList$ = O.flatMap(({text, id}) => {
   return hh('li', {
+    props: O.of({id}),
     append: O.merge(
       hh('input.toggle', {
         props: O.of({type: 'checkbox'})
@@ -63,6 +72,28 @@ const todoList$ = O.flatMap(({text, id}) => {
     )
   })
 }, text$)
+
+const footer$ = count$ => {
+  return hh('footer.footer', {
+    append: O.merge(
+      hh('span.todo-count', {text: O.map(i => `${i} items left`, count$)}),
+      hh('div.filters', {
+        append: O.merge(
+          hh('a.selected', {props: O.of({href: '#/'}), append: O.of('All')}),
+          hh('a', {
+            props: O.of({href: '#/active'}),
+            append: O.of('Active')
+          }),
+          hh('a', {
+            props: O.of({href: '#/completed'}),
+            append: O.of('Completed')
+          })
+        )
+      }),
+      hh('button.clear-completed', {append: O.of('Clear completed')})
+    )
+  })
+}
 
 const view$ = hh('div', {
   append: O.merge(
@@ -86,12 +117,16 @@ const view$ = hh('div', {
             hh('ul.todo-list', {
               append: todoList$,
               removeAt: destroy$
-            })
+            }),
+            O.switchMap(
+              _ => (_ ? footer$(count$) : O.of('')),
+              O.skipRepeats((a, b) => a === b, O.map(i => i > 0, count$))
+            )
           )
         })
       )
     }),
-    footer$
+    pageFooter$
   )
 })
 document.addEventListener('DOMContentLoaded', () => {
