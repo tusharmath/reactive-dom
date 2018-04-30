@@ -40,8 +40,10 @@ class ChildObserver implements O.IObserver<ElementWithId> {
 class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
-    const children$ = O.merge(...this.children.map(($, id) => O.map(elm => ({elm, id}), $)))
-    return children$.subscribe(new ChildObserver(this.sel, observer), scheduler)
+    return O.merge(...this.children.map(($, id) => O.map(elm => ({elm, id}), $))).subscribe(
+      new ChildObserver(this.sel, observer),
+      scheduler
+    )
   }
 }
 
