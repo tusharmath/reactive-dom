@@ -1,1 +1,1 @@
-export {hh} from './src/internal/hh'
+export {h} from './src/internal/hh'
