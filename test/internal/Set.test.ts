@@ -37,20 +37,20 @@ describe('Set', () => {
     })
   })
 
-  describe('next()', () => {
-    it('should return the nearest neigbour', () => {
+  describe('gte()', () => {
+    it('should return the gte neighbour', () => {
       const actual = new Set()
         .add(1)
         .add(5)
-        .nearest(3)
+        .gte(3)
       assert.equal(actual, 5)
     })
 
-    it('should return the nearest neigbour', () => {
+    it('should return the gte neigbour', () => {
       const actual = new Set()
         .add(1)
         .add(5)
-        .nearest(6)
+        .gte(6)
       assert.equal(actual, -Infinity)
     })
   })
