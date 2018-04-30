@@ -32,5 +32,35 @@ describe('HTMLElementObservable', () => {
       const expected = [EVENT.next(202, html(`<div><span>A</span><span>B</span><span>C</span></div>`))]
       assert.deepEqual(results, expected)
     })
+
+    it('should remove child on complete', () => {
+      const SH = createTestScheduler()
+      const a$ = h('span', [SH.Hot('---A')])
+      const b$ = h('span', [SH.Hot('--B|')])
+      const c$ = h('span', [SH.Hot('-----C')])
+      const {results} = SH.start(() => h('div', [a$, b$, c$]))
+      const expected = [EVENT.next(202, html(`<div><span>A</span><span>C</span></div>`))]
+      assert.deepEqual(results, expected)
+    })
+
+    it('should not complete until all children have completed', () => {
+      const SH = createTestScheduler()
+      const a$ = h('span', [SH.Hot('-A|')])
+      const b$ = h('span', [SH.Hot('----B|')])
+      const c$ = h('span', [SH.Hot('-------C')])
+      const {results} = SH.start(() => h('div', [a$, b$, c$]))
+      const expected = [EVENT.next(201, html(`<div><span>C</span></div>`))]
+      assert.deepEqual(results, expected)
+    })
+
+    it('should complete when all children have completed', () => {
+      const SH = createTestScheduler()
+      const a$ = h('span', [SH.Hot('-A|')])
+      const b$ = h('span', [SH.Hot('----B|')])
+      const c$ = h('span', [SH.Hot('-------C|')])
+      const {results} = SH.start(() => h('div', [a$, b$, c$]))
+      const expected = [EVENT.next(201, html(`<div></div>`)), EVENT.complete(208)]
+      assert.deepEqual(results, expected)
+    })
   })
 })

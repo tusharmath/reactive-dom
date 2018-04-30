@@ -1,49 +1,81 @@
 import * as O from 'observable-air'
-import {IObserver, IScheduler, ISubscription} from 'observable-air'
+import {CompositeSubscription, IObserver, IScheduler, ISubscription} from 'observable-air'
+import {LinkedListNode} from 'observable-air/src/internal/LinkedList'
 import {createElement} from './createElement'
 import {Set} from './Set'
 import {toNode} from './toNode'
 
 export type Insertable = Node | HTMLElement | string | number
-export type ElementWithId = {elm: Insertable; id: number}
 
-class ChildObserver implements O.IObserver<ElementWithId> {
+class ElmContainer {
   private dispatched = false
   private readonly elm: HTMLElement
   private set = new Set()
-  private elmMap: {[ke: number]: Node} = {}
+  private elmMap = new Map<number, Node>()
+  private expected = 0
   constructor(sel: string, private sink: O.IObserver<Insertable>) {
     this.elm = createElement(sel)
   }
+
+  expect() {
+    this.expected++
+  }
+
+  attach(elm: Node, id: number) {
+    const child = elm
+    if (this.set.has(id)) this.elm.replaceChild(child, this.elm.childNodes[id])
+    else if (Number.isFinite(this.set.gte(id))) this.elm.insertBefore(child, this.elmMap.get(this.set.gte(id)) as Node)
+    else this.elm.appendChild(child)
+    if (this.dispatched === false && this.elm.childNodes.length === 1) {
+      this.sink.next(this.elm)
+      this.dispatched = true
+    }
+    this.set = this.set.add(id)
+    this.elmMap.set(id, child)
+  }
+
+  detach(id: number) {
+    this.elm.removeChild(this.elmMap.get(id) as Node)
+    this.expected--
+    if (this.expected === 0) this.sink.complete()
+  }
+}
+
+class ChildObserver implements IObserver<Insertable> {
+  ref?: LinkedListNode<ISubscription>
+  constructor(
+    private id: number,
+    private parent: ElmContainer,
+    private sink: IObserver<HTMLElement>,
+    private cSub: CompositeSubscription
+  ) {
+    this.parent.expect()
+  }
+
   complete(): void {
-    this.sink.complete()
+    this.parent.detach(this.id)
+    this.cSub.remove(this.ref)
   }
 
   error(err: Error): void {
     this.sink.error(err)
   }
 
-  next(val: ElementWithId): void {
-    const child = toNode(val.elm)
-    if (this.set.has(val.id)) this.elm.replaceChild(child, this.elm.childNodes[val.id])
-    else if (Number.isFinite(this.set.gte(val.id))) this.elm.insertBefore(child, this.elmMap[this.set.gte(val.id)])
-    else this.elm.appendChild(child)
-    if (this.dispatched === false && this.elm.childNodes.length === 1) {
-      this.sink.next(this.elm)
-      this.dispatched = true
-    }
-    this.set = this.set.add(val.id)
-    this.elmMap[val.id] = child
+  next(val: Insertable): void {
+    this.parent.attach(toNode(val), this.id)
   }
 }
 
 class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
-    return O.merge(...this.children.map(($, id) => O.map(elm => ({elm, id}), $))).subscribe(
-      new ChildObserver(this.sel, observer),
-      scheduler
-    )
+    const cSub = new O.CompositeSubscription()
+    const node = new ElmContainer(this.sel, observer)
+    for (var i = 0; i < this.children.length; i++) {
+      const childObserver = new ChildObserver(i, node, observer, cSub)
+      childObserver.ref = cSub.add(this.children[i].subscribe(childObserver, scheduler))
+    }
+    return cSub
   }
 }
 
