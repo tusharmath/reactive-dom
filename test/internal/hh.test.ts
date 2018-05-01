@@ -4,6 +4,7 @@
 
 import {assert} from 'chai'
 import {createTestScheduler, EVENT} from 'observable-air/test'
+import {log} from 'util'
 import {h} from '../../src/internal/hh'
 import {html} from '../../src/internal/html'
 
@@ -60,6 +61,32 @@ describe('HTMLElementObservable', () => {
       const c$ = h('span', [SH.Hot('-------C|')])
       const {results} = SH.start(() => h('div', [a$, b$, c$]))
       const expected = [EVENT.next(201, html(`<div></div>`)), EVENT.complete(208)]
+      assert.deepEqual(results, expected)
+    })
+  })
+
+  describe('attrs', () => {
+    it('should set element attrs', () => {
+      const SH = createTestScheduler()
+      const attr$ = SH.Hot(EVENT.next(205, {href: '/home'}))
+      const {results} = SH.start(() => h('a', {attrs: attr$}, [SH.Hot('-A')]))
+      const expected = [EVENT.next(201, html(`<a href="/home">A</a>`))]
+      assert.deepEqual(results, expected)
+    })
+
+    it('should remove old element attrs', () => {
+      const SH = createTestScheduler()
+      const attr$ = SH.Hot([EVENT.next(205, {href: '/home', target: '_blank'}), EVENT.next(209, {href: '/profile'})])
+      const {results} = SH.start(() => h('a', {attrs: attr$}, [SH.Hot('-A')]))
+      const expected = [EVENT.next(201, html(`<a href="/profile">A</a>`))]
+      assert.deepEqual(results, expected)
+    })
+
+    it('should emit as soon as an attribute is available', () => {
+      const SH = createTestScheduler()
+      const attr$ = SH.Hot(EVENT.next(201, {href: '/home'}))
+      const {results} = SH.start(() => h('a', {attrs: attr$}, [SH.Hot('--------A')]))
+      const expected = [EVENT.next(201, html(`<a href="/home">A</a>`))]
       assert.deepEqual(results, expected)
     })
   })

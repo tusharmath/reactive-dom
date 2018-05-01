@@ -17,27 +17,66 @@ class ElmContainer {
     this.elm = createElement(sel)
   }
 
-  expect() {
+  hold() {
     this.expected++
   }
 
-  attach(elm: Node, id: number) {
+  add(elm: Node, id: number) {
     const child = elm
     if (this.set.has(id)) this.elm.replaceChild(child, this.elm.childNodes[id])
     else if (Number.isFinite(this.set.gte(id))) this.elm.insertBefore(child, this.elmMap.get(this.set.gte(id)) as Node)
     else this.elm.appendChild(child)
-    if (this.dispatched === false && this.elm.childNodes.length === 1) {
-      this.sink.next(this.elm)
-      this.dispatched = true
-    }
     this.set = this.set.add(id)
     this.elmMap.set(id, child)
   }
 
-  detach(id: number) {
+  remove(id: number) {
     this.elm.removeChild(this.elmMap.get(id) as Node)
+  }
+
+  release() {
     this.expected--
     if (this.expected === 0) this.sink.complete()
+  }
+
+  setAttrs = (attrs: {[k: string]: string}) => {
+    // remove old ones
+    for (var i = 0; i < this.elm.attributes.length; i++) {
+      const attr = this.elm.attributes.item(i)
+      if (!attrs[attr.name]) this.elm.removeAttribute(attr.name)
+    }
+
+    // remove old ones
+    for (var k in attrs) if (attrs[k] !== this.elm.getAttribute(k)) this.elm.setAttribute(k, attrs[k])
+  }
+
+  dispatch() {
+    if (!this.dispatched) {
+      this.sink.next(this.elm)
+      this.dispatched = true
+    }
+  }
+}
+
+class DataObserver<T> implements IObserver<T> {
+  ref?: LinkedListNode<ISubscription>
+  constructor(
+    private sink: IObserver<any>,
+    private cSub: CompositeSubscription,
+    private parent: ElmContainer,
+    private ap: (t: T) => void
+  ) {}
+  complete(): void {
+    this.cSub.remove(this.ref)
+  }
+
+  error(err: Error): void {
+    this.sink.next(err)
+  }
+
+  next(val: T): void {
+    this.ap(val)
+    this.parent.dispatch()
   }
 }
 
@@ -49,11 +88,12 @@ class ChildObserver implements IObserver<Insertable> {
     private sink: IObserver<HTMLElement>,
     private cSub: CompositeSubscription
   ) {
-    this.parent.expect()
+    this.parent.hold()
   }
 
   complete(): void {
-    this.parent.detach(this.id)
+    this.parent.remove(this.id)
+    this.parent.release()
     this.cSub.remove(this.ref)
   }
 
@@ -62,7 +102,8 @@ class ChildObserver implements IObserver<Insertable> {
   }
 
   next(val: Insertable): void {
-    this.parent.attach(toNode(val), this.id)
+    this.parent.add(toNode(val), this.id)
+    this.parent.dispatch()
   }
 }
 
@@ -71,11 +112,27 @@ class HH implements O.IObservable<Insertable> {
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
     const cSub = new O.CompositeSubscription()
     const node = new ElmContainer(this.sel, observer)
-    for (var i = 0; i < this.children.length; i++) {
-      const childObserver = new ChildObserver(i, node, observer, cSub)
-      childObserver.ref = cSub.add(this.children[i].subscribe(childObserver, scheduler))
+    this._data(cSub, node, observer, scheduler)
+    for (var j = 0; j < this.children.length; j++) {
+      const childObserver = new ChildObserver(j, node, observer, cSub)
+      childObserver.ref = cSub.add(this.children[j].subscribe(childObserver, scheduler))
     }
     return cSub
+  }
+
+  private _data(cSub: CompositeSubscription, node: ElmContainer, sink: IObserver<any>, scheduler: IScheduler) {
+    const {attrs, props, style, css} = this.data
+    if (attrs) {
+      const dataObserver = new DataObserver(sink, cSub, node, node.setAttrs)
+      dataObserver.ref = cSub.add(attrs.subscribe(dataObserver, scheduler))
+    }
+    // if (props) cSub.add(props.subscribe(new PropsObserver(node), scheduler))
+    // if (style) cSub.add(style.subscribe(new StyleObserver(node), scheduler))
+    // if (css)
+    //   for (var i in css)
+    //     if (css.hasOwnProperty(i)) {
+    //       cSub.add(css[i].subscribe(new CssObserver(node), scheduler))
+    //     }
   }
 }
 
@@ -87,6 +144,7 @@ export type hReturnType = O.IObservable<HTMLElement>
 export type hData = {
   attrs?: O.IObservable<{[key: string]: string}>
   css?: {[key: string]: O.IObservable<boolean>}
+  props?: O.IObservable<{[k: string]: any}>
   style?: O.IObservable<{[key in keyof CSSStyleDeclaration]: CSSStyleDeclaration[key]}>
 }
 
