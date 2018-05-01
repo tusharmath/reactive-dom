@@ -127,7 +127,7 @@ class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
     const sub = new ELMSubscription(this.sel, observer)
-    const {attrs, props, style, css} = this.data
+    const {attrs, style} = this.data
     if (attrs) {
       const ob = new AttrObserver(observer, sub)
       ob.ref = sub.add(attrs.subscribe(ob, scheduler))
@@ -151,8 +151,6 @@ export type hChildren = Array<O.IObservable<Insertable>>
 export type hReturnType = O.IObservable<HTMLElement>
 export type hData = {
   attrs?: O.IObservable<{[key: string]: string}>
-  css?: {[key: string]: O.IObservable<boolean>}
-  props?: O.IObservable<{[k: string]: any}>
   style?: O.IObservable<{[key in keyof CSSStyleDeclaration]: CSSStyleDeclaration[key]}>
 }
 
