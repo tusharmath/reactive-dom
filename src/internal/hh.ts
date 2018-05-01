@@ -60,8 +60,8 @@ class AttrObserver implements IObserver<{[k: string]: string}> {
   ref?: LinkedListNode<ISubscription>
   constructor(private sink: IObserver<any>, private parent: ELMSubscription) {}
   complete(): void {
-    this.parent.remove(this.ref)
     this.parent.setAttrs({})
+    this.parent.remove(this.ref)
   }
 
   error(err: Error): void {
