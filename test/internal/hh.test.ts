@@ -89,5 +89,28 @@ describe('HTMLElementObservable', () => {
       const expected = [EVENT.next(201, html(`<a href="/home">A</a>`))]
       assert.deepEqual(results, expected)
     })
+
+    /**
+     * Empty elements are a genuine use case
+     */
+    it('should render with no child', () => {
+      const SH = createTestScheduler()
+      const attr$ = SH.Hot(EVENT.next(201, {href: '/home'}))
+      const {results} = SH.start(() => h('a', {attrs: attr$}, []))
+      const expected = [EVENT.next(201, html(`<a href="/home"></a>`))]
+      assert.deepEqual(results, expected)
+    })
+
+    /**
+     * If attributes are set via an observable
+     * they should also be remove when the observable completes
+     */
+    it('should remove attrs on completion', () => {
+      const SH = createTestScheduler()
+      const attr$ = SH.Hot(EVENT.next(201, {href: '/home'}), EVENT.complete(205))
+      const {results} = SH.start(() => h('a', {attrs: attr$}, []))
+      const expected = [EVENT.next(201, html(`<a></a>`)), EVENT.complete(205)]
+      assert.deepEqual(results, expected)
+    })
   })
 })

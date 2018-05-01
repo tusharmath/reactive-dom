@@ -7,39 +7,44 @@ import {toNode} from './toNode'
 
 export type Insertable = Node | HTMLElement | string | number
 
-class ElmContainer {
+class ELMSubscription extends CompositeSubscription {
   private dispatched = false
   private readonly elm: HTMLElement
   private set = new Set()
   private elmMap = new Map<number, Node>()
-  private expected = 0
+  private locks = 0
   constructor(sel: string, private sink: O.IObserver<Insertable>) {
+    super()
     this.elm = createElement(sel)
   }
 
   hold() {
-    this.expected++
+    this.locks++
   }
 
-  add(elm: Node, id: number) {
+  addChild(elm: Node, id: number) {
     const child = elm
     if (this.set.has(id)) this.elm.replaceChild(child, this.elm.childNodes[id])
     else if (Number.isFinite(this.set.gte(id))) this.elm.insertBefore(child, this.elmMap.get(this.set.gte(id)) as Node)
     else this.elm.appendChild(child)
     this.set = this.set.add(id)
     this.elmMap.set(id, child)
+    this.dispatch()
   }
 
-  remove(id: number) {
+  removeChild(id: number) {
     this.elm.removeChild(this.elmMap.get(id) as Node)
   }
 
   release() {
-    this.expected--
-    if (this.expected === 0) this.sink.complete()
+    this.locks--
+    if (this.locks === 0) {
+      this.sink.complete()
+      this.unsubscribe()
+    }
   }
 
-  setAttrs = (attrs: {[k: string]: string}) => {
+  setAttrs(attrs: {[k: string]: string}) {
     // remove old ones
     for (var i = 0; i < this.elm.attributes.length; i++) {
       const attr = this.elm.attributes.item(i)
@@ -48,9 +53,10 @@ class ElmContainer {
 
     // remove old ones
     for (var k in attrs) if (attrs[k] !== this.elm.getAttribute(k)) this.elm.setAttribute(k, attrs[k])
+    this.dispatch()
   }
 
-  dispatch() {
+  private dispatch() {
     if (!this.dispatched) {
       this.sink.next(this.elm)
       this.dispatched = true
@@ -58,25 +64,23 @@ class ElmContainer {
   }
 }
 
-class DataObserver<T> implements IObserver<T> {
+class AttrObserver implements IObserver<{[k: string]: string}> {
   ref?: LinkedListNode<ISubscription>
-  constructor(
-    private sink: IObserver<any>,
-    private cSub: CompositeSubscription,
-    private parent: ElmContainer,
-    private ap: (t: T) => void
-  ) {}
+  constructor(private sink: IObserver<any>, private parent: ELMSubscription) {
+    this.parent.hold()
+  }
   complete(): void {
-    this.cSub.remove(this.ref)
+    this.parent.remove(this.ref)
+    this.parent.release()
+    this.parent.setAttrs({})
   }
 
   error(err: Error): void {
     this.sink.next(err)
   }
 
-  next(val: T): void {
-    this.ap(val)
-    this.parent.dispatch()
+  next(val: {[p: string]: string}): void {
+    this.parent.setAttrs(val)
   }
 }
 
@@ -84,7 +88,7 @@ class ChildObserver implements IObserver<Insertable> {
   ref?: LinkedListNode<ISubscription>
   constructor(
     private id: number,
-    private parent: ElmContainer,
+    private parent: ELMSubscription,
     private sink: IObserver<HTMLElement>,
     private cSub: CompositeSubscription
   ) {
@@ -92,7 +96,7 @@ class ChildObserver implements IObserver<Insertable> {
   }
 
   complete(): void {
-    this.parent.remove(this.id)
+    this.parent.removeChild(this.id)
     this.parent.release()
     this.cSub.remove(this.ref)
   }
@@ -102,29 +106,27 @@ class ChildObserver implements IObserver<Insertable> {
   }
 
   next(val: Insertable): void {
-    this.parent.add(toNode(val), this.id)
-    this.parent.dispatch()
+    this.parent.addChild(toNode(val), this.id)
   }
 }
 
 class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
-    const cSub = new O.CompositeSubscription()
-    const node = new ElmContainer(this.sel, observer)
-    this._data(cSub, node, observer, scheduler)
+    const node = new ELMSubscription(this.sel, observer)
+    this._data(node, observer, scheduler)
     for (var j = 0; j < this.children.length; j++) {
-      const childObserver = new ChildObserver(j, node, observer, cSub)
-      childObserver.ref = cSub.add(this.children[j].subscribe(childObserver, scheduler))
+      const childObserver = new ChildObserver(j, node, observer, node)
+      childObserver.ref = node.add(this.children[j].subscribe(childObserver, scheduler))
     }
-    return cSub
+    return node
   }
 
-  private _data(cSub: CompositeSubscription, node: ElmContainer, sink: IObserver<any>, scheduler: IScheduler) {
+  private _data(node: ELMSubscription, sink: IObserver<any>, scheduler: IScheduler) {
     const {attrs, props, style, css} = this.data
     if (attrs) {
-      const dataObserver = new DataObserver(sink, cSub, node, node.setAttrs)
-      dataObserver.ref = cSub.add(attrs.subscribe(dataObserver, scheduler))
+      const observer = new AttrObserver(sink, node)
+      observer.ref = node.add(attrs.subscribe(observer, scheduler))
     }
     // if (props) cSub.add(props.subscribe(new PropsObserver(node), scheduler))
     // if (style) cSub.add(style.subscribe(new StyleObserver(node), scheduler))
