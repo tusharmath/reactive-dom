@@ -2,7 +2,8 @@
  * Created by tushar on 30/04/18
  */
 
-const MAX_NUM = Math.pow(2, 32) - 1
+const MAX_LEN = 32
+const MAX_NUM = Math.pow(2, MAX_LEN) - 1
 
 /**
  * Set is custom immutable implementation of ES6 Set which is designed for performance.
@@ -32,6 +33,7 @@ export class Set {
    * @returns {Set}
    */
   add(id: number) {
+    if (id >= MAX_LEN) throw new Error('id should remain between 0-31')
     return new Set(this.status | (1 << id))
   }
 

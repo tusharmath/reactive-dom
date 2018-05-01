@@ -28,12 +28,18 @@ describe('Set', () => {
       assert.equal(actual, false)
     })
 
-    it('should return false when value does not exist', () => {
+    it('should return true when value does exist', () => {
       const actual = new Set()
         .add(1)
         .add(5)
         .has(5)
       assert.equal(actual, true)
+    })
+
+    context('beyond 32', () => {
+      it('should throw an error', () => {
+        assert.throws(() => new Set().add(32), 'id should remain between 0-31')
+      })
     })
   })
 
@@ -46,7 +52,7 @@ describe('Set', () => {
       assert.equal(actual, 5)
     })
 
-    it('should return the gte neigbour', () => {
+    it('should return the gte neighbour', () => {
       const actual = new Set()
         .add(1)
         .add(5)
