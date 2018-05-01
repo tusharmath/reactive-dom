@@ -12,6 +12,7 @@ class ELMSubscription extends CompositeSubscription {
   private readonly elm: HTMLElement
   private set = new Set()
   private elmMap = new Map<number, Node>()
+  private _prevStyle?: any
   constructor(sel: string, private sink: O.IObserver<Insertable>) {
     super()
     this.elm = createElement(sel)
@@ -38,7 +39,7 @@ class ELMSubscription extends CompositeSubscription {
       if (!attrs[attr.name]) this.elm.removeAttribute(attr.name)
     }
 
-    // remove old ones
+    // add new ones
     for (var k in attrs) if (attrs[k] !== this.elm.getAttribute(k)) this.elm.setAttribute(k, attrs[k])
     this.dispatch()
   }
@@ -54,14 +55,27 @@ class ELMSubscription extends CompositeSubscription {
     super.remove(d)
     if (this.length() === 0 && !this.closed) this.sink.complete()
   }
+
+  setStyle(style: any) {
+    const elmStyle: any = this.elm.style
+
+    // remove old ones
+    if (this._prevStyle) for (let i in this._prevStyle) if (!style[i]) elmStyle.removeProperty(i)
+
+    // add new ones
+    for (let i in style) if (elmStyle[i] !== style[i]) elmStyle[i] = style[i]
+
+    this._prevStyle = style
+    this.dispatch()
+  }
 }
 
 class AttrObserver implements IObserver<{[k: string]: string}> {
   ref?: LinkedListNode<ISubscription>
-  constructor(private sink: IObserver<any>, private parent: ELMSubscription) {}
+  constructor(private sink: IObserver<any>, private elm: ELMSubscription) {}
   complete(): void {
-    this.parent.setAttrs({})
-    this.parent.remove(this.ref)
+    this.elm.setAttrs({})
+    this.elm.remove(this.ref)
   }
 
   error(err: Error): void {
@@ -69,7 +83,25 @@ class AttrObserver implements IObserver<{[k: string]: string}> {
   }
 
   next(val: {[p: string]: string}): void {
-    this.parent.setAttrs(val)
+    this.elm.setAttrs(val)
+  }
+}
+
+class StyleObserver implements IObserver<{[key in keyof CSSStyleDeclaration]: CSSStyleDeclaration[key]}> {
+  public ref?: LinkedListNode<ISubscription>
+  constructor(private sink: IObserver<any>, private elm: ELMSubscription) {}
+
+  complete(): void {
+    this.elm.setStyle({})
+    this.elm.remove(this.ref)
+  }
+
+  error(err: Error): void {
+    this.sink.next(err)
+  }
+
+  next(val: {[key in keyof CSSStyleDeclaration]: CSSStyleDeclaration[key]}): void {
+    this.elm.setStyle(val)
   }
 }
 
@@ -97,8 +129,12 @@ class HH implements O.IObservable<Insertable> {
     const sub = new ELMSubscription(this.sel, observer)
     const {attrs, props, style, css} = this.data
     if (attrs) {
-      const attrO = new AttrObserver(observer, sub)
-      attrO.ref = sub.add(attrs.subscribe(attrO, scheduler))
+      const ob = new AttrObserver(observer, sub)
+      ob.ref = sub.add(attrs.subscribe(ob, scheduler))
+    }
+    if (style) {
+      const ob = new StyleObserver(observer, sub)
+      ob.ref = sub.add(style.subscribe(ob, scheduler))
     }
     for (var j = 0; j < this.children.length; j++) {
       const childObserver = new ChildObserver(j, sub, observer)

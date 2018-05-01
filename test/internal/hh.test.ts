@@ -113,4 +113,40 @@ describe('HTMLElementObservable', () => {
       assert.deepEqual(results, expected)
     })
   })
+  describe('style', () => {
+    it('should set element style', () => {
+      const SH = createTestScheduler()
+      const color$ = SH.Hot(EVENT.next(205, {color: '#FFF'}))
+      const {results} = SH.start(() => h('div', {style: color$}))
+      const expected = [EVENT.next(205, html(`<div style="color: rgb(255, 255, 255);"></div>`))]
+      assert.deepEqual(results, expected)
+    })
+
+    it('should remove old element style', () => {
+      const SH = createTestScheduler()
+      const style$ = SH.Hot([
+        EVENT.next(205, {color: '#FFF', border: '1px solid #000'}),
+        EVENT.next(209, {color: '#EEE'})
+      ])
+      const {results} = SH.start(() => h('div', {style: style$}))
+      const expected = [EVENT.next(205, html(`<div style="color: rgb(238, 238, 238);"></div>`))]
+      assert.deepEqual(results, expected)
+    })
+
+    it('should node as soon as a style is available', () => {
+      const SH = createTestScheduler()
+      const color$ = SH.Hot(EVENT.next(215, {color: '#FFF'}))
+      const {results} = SH.start(() => h('div', {style: color$}))
+      const expected = [EVENT.next(215, html(`<div style="color: rgb(255, 255, 255);"></div>`))]
+      assert.deepEqual(results, expected)
+    })
+
+    it('should remove all styles on completion', () => {
+      const SH = createTestScheduler()
+      const color$ = SH.Hot(EVENT.next(215, {color: '#FFF'}), EVENT.complete(220))
+      const {results} = SH.start(() => h('div', {style: color$}))
+      const expected = [EVENT.next(215, html(`<div style=""></div>`)), EVENT.complete(220)]
+      assert.deepEqual(results, expected)
+    })
+  })
 })
