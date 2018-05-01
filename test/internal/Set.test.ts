@@ -40,6 +40,12 @@ describe('Set', () => {
       it('should throw an error', () => {
         assert.throws(() => new Set().add(32), 'id should remain between 0-31')
       })
+
+      // TODO: skip until BigInt() support is available on chrome
+      it.skip('should handle large numbers', () => {
+        const set = new Set().add(32)
+        assert.equal(set.has(0), false)
+      })
     })
   })
 
