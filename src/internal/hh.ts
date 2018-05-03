@@ -1,10 +1,11 @@
 import * as O from 'observable-air'
-import {CompositeSubscription, IObserver, IScheduler, ISubscription} from 'observable-air'
+import {CompositeSubscription, IObservable, IObserver, IScheduler, ISubscription, Observable} from 'observable-air'
 import {LinkedListNode} from 'observable-air/src/internal/LinkedList'
 import {createElement} from './createElement'
 import {Set} from './Set'
 import {toNode} from './toNode'
 
+export const hStatic = (text: Insertable) => new Observable<Insertable>(observer => observer.next(text))
 export type Insertable = Node | HTMLElement | string | number
 
 class ELMSubscription extends CompositeSubscription {
@@ -123,6 +124,10 @@ class ChildObserver implements IObserver<Insertable> {
   }
 }
 
+function isObservable(t: any): t is IObservable<any> {
+  return typeof t.subscribe === 'function'
+}
+
 class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
@@ -138,7 +143,9 @@ class HH implements O.IObservable<Insertable> {
     }
     for (var j = 0; j < this.children.length; j++) {
       const childObserver = new ChildObserver(j, sub, observer)
-      childObserver.ref = sub.add(this.children[j].subscribe(childObserver, scheduler))
+      const t = this.children[j]
+      const child = isObservable(t) ? t : hStatic(t)
+      childObserver.ref = sub.add(child.subscribe(childObserver, scheduler))
     }
     return sub
   }
@@ -147,7 +154,7 @@ class HH implements O.IObservable<Insertable> {
 /**
  * hyperscript function
  */
-export type hChildren = Array<O.IObservable<Insertable>>
+export type hChildren = Array<O.IObservable<Insertable> | Insertable>
 export type hReturnType = O.IObservable<HTMLElement>
 export type hData = {
   attrs?: O.IObservable<{[key: string]: string}>

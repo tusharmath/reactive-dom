@@ -63,6 +63,13 @@ describe('HTMLElementObservable', () => {
       const expected = [EVENT.next(201, html(`<div></div>`)), EVENT.complete(208)]
       assert.deepEqual(results, expected)
     })
+
+    it('should auto convert non observable children', () => {
+      const SH = createTestScheduler()
+      const {results} = SH.start(() => h('div', ['Happy Birthday']))
+      const expected = [EVENT.next(201, html(`<div>Happy Birthday</div>`))]
+      assert.deepEqual(results, expected)
+    })
   })
 
   describe('attrs', () => {
