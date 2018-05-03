@@ -14,6 +14,7 @@ class ELMSubscription extends CompositeSubscription {
   private set = new Set()
   private elmMap = new Map<number, Node>()
   private _prevStyle?: any
+  private _prevProps?: any
   constructor(sel: string, private sink: O.IObserver<Insertable>) {
     super()
     this.elm = createElement(sel)
@@ -69,6 +70,19 @@ class ELMSubscription extends CompositeSubscription {
     this._prevStyle = style
     this.dispatch()
   }
+
+  setProps(props: any) {
+    const elm: any = this.elm
+
+    // remove old ones
+    if (this._prevProps) for (let i in this._prevProps) if (!props[i]) delete elm[i]
+
+    // add new ones
+    for (let i in props) if (props[i] !== elm[i]) elm[i] = props[i]
+
+    this._prevProps = props
+    this.dispatch()
+  }
 }
 
 class AttrObserver implements IObserver<{[k: string]: string}> {
@@ -106,6 +120,24 @@ class StyleObserver implements IObserver<{[key in keyof CSSStyleDeclaration]: CS
   }
 }
 
+class PropObserver implements IObserver<any> {
+  public ref?: LinkedListNode<ISubscription>
+  constructor(private sink: IObserver<any>, private elm: ELMSubscription) {}
+
+  complete(): void {
+    this.elm.setProps({})
+    this.elm.remove(this.ref)
+  }
+
+  error(err: Error): void {
+    this.sink.next(err)
+  }
+
+  next(val: any): void {
+    this.elm.setProps(val)
+  }
+}
+
 class ChildObserver implements IObserver<Insertable> {
   ref?: LinkedListNode<ISubscription>
   constructor(private id: number, private parent: ELMSubscription, private sink: IObserver<HTMLElement>) {}
@@ -132,7 +164,7 @@ class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
     const sub = new ELMSubscription(this.sel, observer)
-    const {attrs, style} = this.data
+    const {attrs, style, prop} = this.data
     if (attrs) {
       const ob = new AttrObserver(observer, sub)
       ob.ref = sub.add(attrs.subscribe(ob, scheduler))
@@ -140,6 +172,10 @@ class HH implements O.IObservable<Insertable> {
     if (style) {
       const ob = new StyleObserver(observer, sub)
       ob.ref = sub.add(style.subscribe(ob, scheduler))
+    }
+    if (prop) {
+      const ob = new PropObserver(observer, sub)
+      ob.ref = sub.add(prop.subscribe(ob, scheduler))
     }
     for (var j = 0; j < this.children.length; j++) {
       const childObserver = new ChildObserver(j, sub, observer)
@@ -159,6 +195,7 @@ export type hReturnType = O.IObservable<HTMLElement>
 export type hData = {
   attrs?: O.IObservable<{[key: string]: string}>
   style?: O.IObservable<{[key in keyof CSSStyleDeclaration]: CSSStyleDeclaration[key]}>
+  prop?: O.IObservable<{[key: string]: any}>
 }
 
 export function h(sel: string): hReturnType

@@ -156,4 +156,37 @@ describe('HTMLElementObservable', () => {
       assert.deepEqual(results, expected)
     })
   })
+  describe('prop', () => {
+    it('should set element prop', () => {
+      const SH = createTestScheduler()
+      const prop = SH.Hot(EVENT.next(205, {someRandomProp: 'someRandomValue'}))
+      const elm: any = SH.start(() => h('div', {prop: prop})).results[0]
+      assert.equal(elm.value.someRandomProp, 'someRandomValue')
+    })
+
+    it('should remove old element prop', () => {
+      const SH = createTestScheduler()
+      const prop = SH.Hot(
+        EVENT.next(205, {someRandomProp: 'someRandomValue'}),
+        EVENT.next(210, {someOtherRandomProp: 'someOtherRandomValue'})
+      )
+      const elm: any = SH.start(() => h('div', {prop: prop})).results[0]
+      assert.isUndefined(elm.value.someRandomProp)
+      assert.equal(elm.value.someOtherRandomProp, 'someOtherRandomValue')
+    })
+
+    it('should node as soon as a prop is available', () => {
+      const SH = createTestScheduler()
+      const prop = SH.Hot(EVENT.next(215, {someRandomProp: 'someRandomValue'}))
+      const time = SH.start(() => h('div', {prop: prop})).results[0].time
+      assert.equal(time, 215)
+    })
+
+    it('should remove all props on completion', () => {
+      const SH = createTestScheduler()
+      const prop = SH.Hot(EVENT.next(215, {someRandomProp: 'someRandomValue'}), EVENT.complete(220))
+      const elm: any = SH.start(() => h('div', {prop: prop})).results[0]
+      assert.isUndefined(elm.value.someRandomProp)
+    })
+  })
 })
