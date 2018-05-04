@@ -71,7 +71,6 @@ describe('HTMLElementObservable', () => {
       assert.deepEqual(results, expected)
     })
   })
-
   describe('attrs', () => {
     it('should set element attrs', () => {
       const SH = createTestScheduler()
@@ -119,6 +118,13 @@ describe('HTMLElementObservable', () => {
       const expected = [EVENT.next(201, html(`<a></a>`)), EVENT.complete(205)]
       assert.deepEqual(results, expected)
     })
+
+    it('should set non observable attrs', () => {
+      const SH = createTestScheduler()
+      const {results} = SH.start(() => h('a', {attrs: {href: '/home'}}, ['A']))
+      const expected = [EVENT.next(201, html(`<a href="/home">A</a>`))]
+      assert.deepEqual(results, expected)
+    })
   })
   describe('style', () => {
     it('should set element style', () => {
@@ -155,6 +161,13 @@ describe('HTMLElementObservable', () => {
       const expected = [EVENT.next(215, html(`<div style=""></div>`)), EVENT.complete(220)]
       assert.deepEqual(results, expected)
     })
+
+    it('should set non observable style', () => {
+      const SH = createTestScheduler()
+      const {results} = SH.start(() => h('a', {style: {color: '#FFF'}}, ['A']))
+      const expected = [EVENT.next(201, html(`<a style="color: rgb(255, 255, 255);">A</a>`))]
+      assert.deepEqual(results, expected)
+    })
   })
   describe('prop', () => {
     it('should set element prop', () => {
@@ -187,6 +200,12 @@ describe('HTMLElementObservable', () => {
       const prop = SH.Hot(EVENT.next(215, {someRandomProp: 'someRandomValue'}), EVENT.complete(220))
       const elm: any = SH.start(() => h('div', {prop: prop})).results[0]
       assert.isUndefined(elm.value.someRandomProp)
+    })
+
+    it('should set non observable props', () => {
+      const SH = createTestScheduler()
+      const elm: any = SH.start(() => h('div', {prop: {randomPROP: 'randomVAL'}}, ['A'])).results[0]
+      assert.equal(elm.value.randomPROP, 'randomVAL')
     })
   })
 })

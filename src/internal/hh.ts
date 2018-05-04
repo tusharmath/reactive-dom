@@ -1,54 +1,38 @@
 import * as O from 'observable-air'
-import {CompositeSubscription, IObservable, IObserver, IScheduler, ISubscription, Observable} from 'observable-air'
+import {CompositeSubscription, IObserver, IScheduler, ISubscription, Observable} from 'observable-air'
 import {LinkedListNode} from 'observable-air/src/internal/LinkedList'
-import {createElement} from './createElement'
-import {Set} from './Set'
+import {isObservable} from './isObservable'
 import {toNode} from './toNode'
+import {RDElement} from './RDElement'
 
 export const hStatic = (text: Insertable) => new Observable<Insertable>(observer => observer.next(text))
 export type Insertable = Node | HTMLElement | string | number
 
 class ELMSubscription extends CompositeSubscription {
   private dispatched = false
-  private readonly elm: HTMLElement
-  private set = new Set()
-  private elmMap = new Map<number, Node>()
-  private _prevStyle?: any
-  private _prevProps?: any
+  private readonly elm: RDElement
   constructor(sel: string, private sink: O.IObserver<Insertable>) {
     super()
-    this.elm = createElement(sel)
+    this.elm = new RDElement(sel)
   }
 
   addChild(elm: Node, id: number) {
-    const child = elm
-    if (this.set.has(id)) this.elm.replaceChild(child, this.elm.childNodes[id])
-    else if (Number.isFinite(this.set.gte(id))) this.elm.insertBefore(child, this.elmMap.get(this.set.gte(id)) as Node)
-    else this.elm.appendChild(child)
-    this.set = this.set.add(id)
-    this.elmMap.set(id, child)
+    this.elm.addChild(elm, id)
     this.dispatch()
   }
 
   removeChild(id: number) {
-    this.elm.removeChild(this.elmMap.get(id) as Node)
+    this.elm.removeChild(id)
   }
 
   setAttrs(attrs: {[k: string]: string}) {
-    // remove old ones
-    for (var i = 0; i < this.elm.attributes.length; i++) {
-      const attr = this.elm.attributes.item(i)
-      if (!attrs[attr.name]) this.elm.removeAttribute(attr.name)
-    }
-
-    // add new ones
-    for (var k in attrs) if (attrs[k] !== this.elm.getAttribute(k)) this.elm.setAttribute(k, attrs[k])
+    this.elm.setAttrs(attrs)
     this.dispatch()
   }
 
   private dispatch() {
     if (!this.dispatched) {
-      this.sink.next(this.elm)
+      this.sink.next(this.elm.elm)
       this.dispatched = true
     }
   }
@@ -58,29 +42,13 @@ class ELMSubscription extends CompositeSubscription {
     if (this.length() === 0 && !this.closed) this.sink.complete()
   }
 
-  setStyle(style: any) {
-    const elmStyle: any = this.elm.style
-
-    // remove old ones
-    if (this._prevStyle) for (let i in this._prevStyle) if (!style[i]) elmStyle.removeProperty(i)
-
-    // add new ones
-    for (let i in style) if (elmStyle[i] !== style[i]) elmStyle[i] = style[i]
-
-    this._prevStyle = style
+  setStyle(style: {[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}) {
+    this.elm.setStyle(style)
     this.dispatch()
   }
 
   setProps(props: any) {
-    const elm: any = this.elm
-
-    // remove old ones
-    if (this._prevProps) for (let i in this._prevProps) if (!props[i]) delete elm[i]
-
-    // add new ones
-    for (let i in props) if (props[i] !== elm[i]) elm[i] = props[i]
-
-    this._prevProps = props
+    this.elm.setProps(props)
     this.dispatch()
   }
 }
@@ -156,26 +124,49 @@ class ChildObserver implements IObserver<Insertable> {
   }
 }
 
-function isObservable(t: any): t is IObservable<any> {
-  return typeof t.subscribe === 'function'
-}
-
 class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
     const sub = new ELMSubscription(this.sel, observer)
     const {attrs, style, prop} = this.data
     if (attrs) {
-      const ob = new AttrObserver(observer, sub)
-      ob.ref = sub.add(attrs.subscribe(ob, scheduler))
+      if (isObservable(attrs)) {
+        const ob = new AttrObserver(observer, sub)
+        ob.ref = sub.add(attrs.subscribe(ob, scheduler))
+      } else {
+        const ref = sub.add(
+          scheduler.asap(() => {
+            sub.setAttrs(attrs)
+            sub.remove(ref)
+          })
+        )
+      }
     }
     if (style) {
-      const ob = new StyleObserver(observer, sub)
-      ob.ref = sub.add(style.subscribe(ob, scheduler))
+      if (isObservable(style)) {
+        const ob = new StyleObserver(observer, sub)
+        ob.ref = sub.add(style.subscribe(ob, scheduler))
+      } else {
+        const ref = sub.add(
+          scheduler.asap(() => {
+            sub.setStyle(style)
+            sub.remove(ref)
+          })
+        )
+      }
     }
     if (prop) {
-      const ob = new PropObserver(observer, sub)
-      ob.ref = sub.add(prop.subscribe(ob, scheduler))
+      if (isObservable(prop)) {
+        const ob = new PropObserver(observer, sub)
+        ob.ref = sub.add(prop.subscribe(ob, scheduler))
+      } else {
+        const ref = sub.add(
+          scheduler.asap(() => {
+            sub.setProps(prop)
+            sub.remove(ref)
+          })
+        )
+      }
     }
     for (var j = 0; j < this.children.length; j++) {
       const childObserver = new ChildObserver(j, sub, observer)
@@ -193,9 +184,11 @@ class HH implements O.IObservable<Insertable> {
 export type hChildren = Array<O.IObservable<Insertable> | Insertable>
 export type hReturnType = O.IObservable<HTMLElement>
 export type hData = {
-  attrs?: O.IObservable<{[key: string]: string}>
-  style?: O.IObservable<{[key in keyof CSSStyleDeclaration]: CSSStyleDeclaration[key]}>
-  prop?: O.IObservable<{[key: string]: any}>
+  attrs?: O.IObservable<{[key: string]: string}> | {[key: string]: string}
+  style?:
+    | O.IObservable<{[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}>
+    | {[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}
+  prop?: O.IObservable<{[key: string]: any}> | {[key: string]: any}
 }
 
 export function h(sel: string): hReturnType
