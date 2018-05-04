@@ -44,5 +44,9 @@ export function h(sel: string, data: hData, children: hChildren): hReturnType
 export function h(...t: any[]): hReturnType {
   return t.length === 3
     ? new HH(t[0], t[1], t[2])
-    : t.length === 2 ? (t[1] instanceof Array ? new HH(t[0], {}, t[1]) : new HH(t[0], t[1], [])) : new HH(t[0], {}, [])
+    : t.length === 2
+      ? t[1] instanceof Array
+        ? new HH(t[0], {}, t[1])
+        : new HH(t[0], t[1], [])
+      : new HH(t[0], {}, [])
 }
