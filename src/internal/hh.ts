@@ -1,12 +1,11 @@
 import * as O from 'observable-air'
-import {CompositeSubscription, IObserver, IScheduler, ISubscription, Observable} from 'observable-air'
+import {CompositeSubscription, IObserver, IScheduler, ISubscription} from 'observable-air'
 import {LinkedListNode} from 'observable-air/src/internal/LinkedList'
+import {hStatic} from './hStatic'
+import {Insertable} from './Insertable'
 import {isObservable} from './isObservable'
 import {RDElement} from './RDElement'
 import {toNode} from './toNode'
-
-export const hStatic = (text: Insertable) => new Observable<Insertable>(observer => observer.next(text))
-export type Insertable = Node | HTMLElement | string | number
 
 class ELMContext extends CompositeSubscription {
   private dispatched = false
