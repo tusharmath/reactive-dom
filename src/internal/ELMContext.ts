@@ -33,7 +33,7 @@ export class ELMContext extends CompositeSubscription {
       const ref = this.add(
         this.sh.asap(() => {
           method.call(this, source)
-          this.remove(ref)
+          super.remove(ref)
         })
       )
     }

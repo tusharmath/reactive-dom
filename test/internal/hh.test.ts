@@ -121,8 +121,8 @@ describe('HTMLElementObservable', () => {
 
     it('should set non observable attrs', () => {
       const SH = createTestScheduler()
-      const {results} = SH.start(() => h('a', {attrs: {href: '/home'}}, ['A']))
-      const expected = [EVENT.next(201, html(`<a href="/home">A</a>`))]
+      const {results} = SH.start(() => h('input', {attrs: {placeholder: 'Enter your name'}}))
+      const expected = [EVENT.next(201, html(`<input placeholder="Enter your name"/>`))]
       assert.deepEqual(results, expected)
     })
   })
