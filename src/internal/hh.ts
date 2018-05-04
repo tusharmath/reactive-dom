@@ -53,13 +53,12 @@ class ELMSubscription extends CompositeSubscription {
   }
 }
 
-abstract class MetaObserver implements IObserver<any> {
+class MetaObserver implements IObserver<any> {
   private _ref?: LinkedListNode<ISubscription>
-  constructor(private sink: IObserver<any>, protected elm: ELMSubscription) {}
-  abstract ap(input: any): void
+  constructor(private sink: IObserver<any>, protected elm: ELMSubscription, private apELM: (val: any) => void) {}
 
   complete(): void {
-    this.ap({})
+    this.apELM.call(this.elm, {})
     this.elm.remove(this._ref)
   }
 
@@ -68,29 +67,11 @@ abstract class MetaObserver implements IObserver<any> {
   }
 
   next(val: any): void {
-    this.ap(val)
+    this.apELM.call(this.elm, val)
   }
 
   set ref(ref: LinkedListNode<ISubscription>) {
     this._ref = ref
-  }
-}
-
-class AttrObserver extends MetaObserver {
-  ap(input: any): void {
-    this.elm.setAttrs(input)
-  }
-}
-
-class StyleObserver extends MetaObserver {
-  ap(input: any): void {
-    this.elm.setStyle(input)
-  }
-}
-
-class PropObserver extends MetaObserver {
-  ap(input: any): void {
-    this.elm.setProps(input)
   }
 }
 
@@ -112,50 +93,34 @@ class ChildObserver implements IObserver<Insertable> {
   }
 }
 
+const setMetadata = (
+  sub: ELMSubscription,
+  observer: IObserver<any>,
+  scheduler: IScheduler,
+  method: (t: any) => void,
+  metaDATA: any
+) => {
+  if (isObservable(metaDATA)) {
+    const ob = new MetaObserver(observer, sub, method)
+    ob.ref = sub.add(metaDATA.subscribe(ob, scheduler))
+  } else {
+    const ref = sub.add(
+      scheduler.asap(() => {
+        method.call(sub, metaDATA)
+        sub.remove(ref)
+      })
+    )
+  }
+}
+
 class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
     const sub = new ELMSubscription(this.sel, observer)
     const {attrs, style, prop} = this.data
-    if (attrs) {
-      if (isObservable(attrs)) {
-        const ob = new AttrObserver(observer, sub)
-        ob.ref = sub.add(attrs.subscribe(ob, scheduler))
-      } else {
-        const ref = sub.add(
-          scheduler.asap(() => {
-            sub.setAttrs(attrs)
-            sub.remove(ref)
-          })
-        )
-      }
-    }
-    if (style) {
-      if (isObservable(style)) {
-        const ob = new StyleObserver(observer, sub)
-        ob.ref = sub.add(style.subscribe(ob, scheduler))
-      } else {
-        const ref = sub.add(
-          scheduler.asap(() => {
-            sub.setStyle(style)
-            sub.remove(ref)
-          })
-        )
-      }
-    }
-    if (prop) {
-      if (isObservable(prop)) {
-        const ob = new PropObserver(observer, sub)
-        ob.ref = sub.add(prop.subscribe(ob, scheduler))
-      } else {
-        const ref = sub.add(
-          scheduler.asap(() => {
-            sub.setProps(prop)
-            sub.remove(ref)
-          })
-        )
-      }
-    }
+    if (attrs) setMetadata(sub, observer, scheduler, sub.setAttrs, attrs)
+    if (style) setMetadata(sub, observer, scheduler, sub.setStyle, style)
+    if (prop) setMetadata(sub, observer, scheduler, sub.setProps, prop)
     for (var j = 0; j < this.children.length; j++) {
       const childObserver = new ChildObserver(j, sub, observer)
       const t = this.children[j]
