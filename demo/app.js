@@ -27,7 +27,7 @@ const view$ = h('div', [
   h('section.todoapp', [
     h('header.header', [
       h('h1', ['todos']),
-      h('input.new-todo', {attrs: {placeholder: 'What need to be done?', autofocus: true}})
+      h('input.new-todo', {attr: {placeholder: 'What need to be done?', autofocus: true}})
     ]),
     h('section.main', [
       h('input.toggle-all', {prop: {type: 'checkbox'}}),

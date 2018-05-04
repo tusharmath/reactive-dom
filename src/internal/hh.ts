@@ -10,10 +10,10 @@ class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
     const ctx = new ELMContext(this.sel, observer, scheduler)
-    const {attrs, style, prop} = this.data
+    const {attrs, style, props} = this.data
     if (attrs) ctx.attach(ctx.setAttrs, attrs)
     if (style) ctx.attach(ctx.setStyle, style)
-    if (prop) ctx.attach(ctx.setProps, prop)
+    if (props) ctx.attach(ctx.setProps, props)
     for (var j = 0; j < this.children.length; j++) {
       const childObserver = new ChildObserver(j, ctx)
       const t = this.children[j]
@@ -34,7 +34,7 @@ export type hData = {
   style?:
     | O.IObservable<{[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}>
     | {[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}
-  prop?: O.IObservable<{[key: string]: any}> | {[key: string]: any}
+  props?: O.IObservable<{[key: string]: any}> | {[key: string]: any}
 }
 
 export function h(sel: string): hReturnType
