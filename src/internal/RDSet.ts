@@ -14,7 +14,7 @@ const MAX_NUM = Math.pow(2, MAX_LEN) - 1
  * — find complexity   = O(1)
  * — gte complexity    = O(1)
  */
-export class Set {
+export class RDSet {
   constructor(private status = 0) {}
 
   /**
@@ -34,7 +34,7 @@ export class Set {
    */
   add(id: number) {
     if (id >= MAX_LEN) throw new Error('id should remain between 0-31')
-    return new Set(this.status | (1 << id))
+    return new RDSet(this.status | (1 << id))
   }
 
   /**
@@ -43,7 +43,7 @@ export class Set {
    * @returns {Set}
    */
   remove(id: number) {
-    return new Set((~(1 << id) >>> 0) & this.status)
+    return new RDSet((~(1 << id) >>> 0) & this.status)
   }
 
   /**

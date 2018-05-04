@@ -2,8 +2,8 @@ import * as O from 'observable-air'
 import {CompositeSubscription, IObserver, IScheduler, ISubscription, Observable} from 'observable-air'
 import {LinkedListNode} from 'observable-air/src/internal/LinkedList'
 import {isObservable} from './isObservable'
-import {toNode} from './toNode'
 import {RDElement} from './RDElement'
+import {toNode} from './toNode'
 
 export const hStatic = (text: Insertable) => new Observable<Insertable>(observer => observer.next(text))
 export type Insertable = Node | HTMLElement | string | number

@@ -3,9 +3,11 @@
  */
 
 import {createElement} from './createElement'
+import {RDSet} from './RDSet'
+
 export class RDElement {
   readonly elm: HTMLElement
-  private set = new Set()
+  private set = new RDSet()
   private elmMap = new Map<number, Node>()
   private _prevStyle?: any
   private _prevProps?: any
