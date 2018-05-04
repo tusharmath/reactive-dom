@@ -8,26 +8,11 @@ import {toNode} from './toNode'
 export const hStatic = (text: Insertable) => new Observable<Insertable>(observer => observer.next(text))
 export type Insertable = Node | HTMLElement | string | number
 
-class ELMSubscription extends CompositeSubscription {
+class ELMContext extends CompositeSubscription {
   private dispatched = false
-  private readonly elm: RDElement
-  constructor(sel: string, private sink: O.IObserver<Insertable>) {
+  private readonly elm = new RDElement(this.sel)
+  constructor(private sel: string, private sink: O.IObserver<Insertable>, private sh: IScheduler) {
     super()
-    this.elm = new RDElement(sel)
-  }
-
-  addChild(elm: Node, id: number) {
-    this.elm.addChild(elm, id)
-    this.dispatch()
-  }
-
-  removeChild(id: number) {
-    this.elm.removeChild(id)
-  }
-
-  setAttrs(attrs: {[k: string]: string}) {
-    this.elm.setAttrs(attrs)
-    this.dispatch()
   }
 
   private dispatch() {
@@ -37,97 +22,109 @@ class ELMSubscription extends CompositeSubscription {
     }
   }
 
-  remove(d?: LinkedListNode<ISubscription>): number | void {
-    super.remove(d)
+  attach(method: (t: any) => void, source: any) {
+    if (isObservable(source)) {
+      const ob = new MetaObserver(this, method)
+      ob.ref = this.add(source.subscribe(ob, this.sh))
+    } else {
+      const ref = this.add(
+        this.sh.asap(() => {
+          method.call(this, source)
+          this.remove(ref)
+        })
+      )
+    }
+  }
+
+  checkComplete() {
     if (this.length() === 0 && !this.closed) this.sink.complete()
   }
 
-  setStyle(style: {[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}) {
-    this.elm.setStyle(style)
+  remove(ref?: LinkedListNode<ISubscription>) {
+    super.remove(ref)
+    this.checkComplete()
+  }
+
+  removeChild(id: number) {
+    this.elm.removeChild(id)
+  }
+
+  error(err: Error) {
+    this.sink.error(err)
+  }
+
+  addChild(val: Insertable, id: number) {
+    this.elm.addChild(toNode(val), id)
     this.dispatch()
   }
 
-  setProps(props: any) {
-    this.elm.setProps(props)
+  setAttrs(val: any) {
+    this.elm.setAttrs(val)
+    this.dispatch()
+  }
+
+  setStyle(val: any) {
+    this.elm.setStyle(val)
+    this.dispatch()
+  }
+
+  setProps(val: any) {
+    this.elm.setProps(val)
     this.dispatch()
   }
 }
 
 class MetaObserver implements IObserver<any> {
-  private _ref?: LinkedListNode<ISubscription>
-  constructor(private sink: IObserver<any>, protected elm: ELMSubscription, private apELM: (val: any) => void) {}
+  public ref?: LinkedListNode<ISubscription>
+  constructor(private ctx: ELMContext, private apELM: (val: any) => void) {}
 
   complete(): void {
-    this.apELM.call(this.elm, {})
-    this.elm.remove(this._ref)
+    this.apELM.call(this.ctx, {})
+    this.ctx.remove(this.ref)
   }
 
   error(err: Error): void {
-    this.sink.next(err)
+    this.ctx.error(err)
   }
 
   next(val: any): void {
-    this.apELM.call(this.elm, val)
-  }
-
-  set ref(ref: LinkedListNode<ISubscription>) {
-    this._ref = ref
+    this.apELM.call(this.ctx, val)
   }
 }
 
 class ChildObserver implements IObserver<Insertable> {
   ref?: LinkedListNode<ISubscription>
-  constructor(private id: number, private parent: ELMSubscription, private sink: IObserver<HTMLElement>) {}
+  constructor(private id: number, private ctx: ELMContext) {}
 
   complete(): void {
-    this.parent.removeChild(this.id)
-    this.parent.remove(this.ref)
+    this.ctx.removeChild(this.id)
+    this.ctx.remove(this.ref)
   }
 
   error(err: Error): void {
-    this.sink.error(err)
+    this.ctx.error(err)
   }
 
   next(val: Insertable): void {
-    this.parent.addChild(toNode(val), this.id)
-  }
-}
-
-const setMetadata = (
-  sub: ELMSubscription,
-  observer: IObserver<any>,
-  scheduler: IScheduler,
-  method: (t: any) => void,
-  metaDATA: any
-) => {
-  if (isObservable(metaDATA)) {
-    const ob = new MetaObserver(observer, sub, method)
-    ob.ref = sub.add(metaDATA.subscribe(ob, scheduler))
-  } else {
-    const ref = sub.add(
-      scheduler.asap(() => {
-        method.call(sub, metaDATA)
-        sub.remove(ref)
-      })
-    )
+    this.ctx.addChild(toNode(val), this.id)
   }
 }
 
 class HH implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
-    const sub = new ELMSubscription(this.sel, observer)
+    const ctx = new ELMContext(this.sel, observer, scheduler)
     const {attrs, style, prop} = this.data
-    if (attrs) setMetadata(sub, observer, scheduler, sub.setAttrs, attrs)
-    if (style) setMetadata(sub, observer, scheduler, sub.setStyle, style)
-    if (prop) setMetadata(sub, observer, scheduler, sub.setProps, prop)
+    if (attrs) ctx.attach(ctx.setAttrs, attrs)
+    if (style) ctx.attach(ctx.setStyle, style)
+    if (prop) ctx.attach(ctx.setProps, prop)
     for (var j = 0; j < this.children.length; j++) {
-      const childObserver = new ChildObserver(j, sub, observer)
+      const childObserver = new ChildObserver(j, ctx)
       const t = this.children[j]
       const child = isObservable(t) ? t : hStatic(t)
-      childObserver.ref = sub.add(child.subscribe(childObserver, scheduler))
+      childObserver.ref = ctx.add(child.subscribe(childObserver, scheduler))
     }
-    return sub
+    return ctx
   }
 }
 
