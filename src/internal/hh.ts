@@ -53,48 +53,14 @@ class ELMSubscription extends CompositeSubscription {
   }
 }
 
-class AttrObserver implements IObserver<{[k: string]: string}> {
-  ref?: LinkedListNode<ISubscription>
-  constructor(private sink: IObserver<any>, private elm: ELMSubscription) {}
-  complete(): void {
-    this.elm.setAttrs({})
-    this.elm.remove(this.ref)
-  }
-
-  error(err: Error): void {
-    this.sink.next(err)
-  }
-
-  next(val: {[p: string]: string}): void {
-    this.elm.setAttrs(val)
-  }
-}
-
-class StyleObserver implements IObserver<{[key in keyof CSSStyleDeclaration]: CSSStyleDeclaration[key]}> {
-  public ref?: LinkedListNode<ISubscription>
-  constructor(private sink: IObserver<any>, private elm: ELMSubscription) {}
+abstract class MetaObserver implements IObserver<any> {
+  private _ref?: LinkedListNode<ISubscription>
+  constructor(private sink: IObserver<any>, protected elm: ELMSubscription) {}
+  abstract ap(input: any): void
 
   complete(): void {
-    this.elm.setStyle({})
-    this.elm.remove(this.ref)
-  }
-
-  error(err: Error): void {
-    this.sink.next(err)
-  }
-
-  next(val: {[key in keyof CSSStyleDeclaration]: CSSStyleDeclaration[key]}): void {
-    this.elm.setStyle(val)
-  }
-}
-
-class PropObserver implements IObserver<any> {
-  public ref?: LinkedListNode<ISubscription>
-  constructor(private sink: IObserver<any>, private elm: ELMSubscription) {}
-
-  complete(): void {
-    this.elm.setProps({})
-    this.elm.remove(this.ref)
+    this.ap({})
+    this.elm.remove(this._ref)
   }
 
   error(err: Error): void {
@@ -102,7 +68,29 @@ class PropObserver implements IObserver<any> {
   }
 
   next(val: any): void {
-    this.elm.setProps(val)
+    this.ap(val)
+  }
+
+  set ref(ref: LinkedListNode<ISubscription>) {
+    this._ref = ref
+  }
+}
+
+class AttrObserver extends MetaObserver {
+  ap(input: any): void {
+    this.elm.setAttrs(input)
+  }
+}
+
+class StyleObserver extends MetaObserver {
+  ap(input: any): void {
+    this.elm.setStyle(input)
+  }
+}
+
+class PropObserver extends MetaObserver {
+  ap(input: any): void {
+    this.elm.setProps(input)
   }
 }
 
