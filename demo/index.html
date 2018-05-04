@@ -26,7 +26,8 @@
     <link rel="stylesheet" href="https://cdn.rawgit.com/tastejs/todomvc-app-css/22ef1be7/index.css">
     <script src="https://unpkg.com/observable-air/.dist/observable-air.umd.dev.js"></script>
     <script>
-        String.prototype.pipe = Boolean.prototype.pipe = Number.prototype.pipe = Object.prototype.pipe = function (fn, ctx) {
+        const COMPOSE_KEY = '$'
+        String.prototype[COMPOSE_KEY] = Boolean.prototype[COMPOSE_KEY] = Number.prototype[COMPOSE_KEY] = Object.prototype[COMPOSE_KEY] = function (fn, ctx) {
           return fn.call(ctx, this)
         }
     </script>
