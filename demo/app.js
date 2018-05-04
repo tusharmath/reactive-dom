@@ -27,24 +27,24 @@ const view$ = h('div', [
   h('section.todoapp', [
     h('header.header', [
       h('h1', ['todos']),
-      h('input.new-todo', {prop: ONCE({placeholder: 'What need to be done?', autofocus: true})})
+      h('input.new-todo', {attrs: {placeholder: 'What need to be done?', autofocus: true}})
     ]),
     h('section.main', [
-      h('input.toggle-all', {prop: ONCE({type: 'checkbox'})}),
+      h('input.toggle-all', {prop: {type: 'checkbox'}}),
       h('label.toggle-all', ['Mark all as complete']),
       h('ul.todo-list', [
         h('li', [
-          h('input.toggle', {prop: ONCE({type: 'checkbox'})}),
+          h('input.toggle', {prop: {type: 'checkbox'}}),
           h('label', ['Things I do and Things I dont']),
           h('button.destroy', EMPTY)
         ]),
         h('li', [
-          h('input.toggle', {prop: ONCE({type: 'checkbox'})}),
+          h('input.toggle', {prop: {type: 'checkbox'}}),
           h('label', ['Things I do and Things I dont']),
           h('button.destroy', EMPTY)
         ]),
         h('li', [
-          h('input.toggle', {prop: ONCE({type: 'checkbox'})}),
+          h('input.toggle', {prop: {type: 'checkbox'}}),
           h('label', ['Things I do and Things I dont']),
           h('button.destroy', EMPTY)
         ])
