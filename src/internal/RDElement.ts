@@ -11,7 +11,6 @@ export class RDElement {
   private set = new RDSet()
   private elmMap = new Map<number, Node>()
   private _prevStyle?: any
-  private _prevProps?: any
   private _prevAttrs?: any
 
   constructor(private sel: string) {
@@ -47,9 +46,8 @@ export class RDElement {
 
   setProps(props: any) {
     const elm = this.elm as any
-    const {add, del} = objectDiff(props, this._prevProps)
+    const {add, del} = objectDiff(props, this.elm)
     del.forEach(_ => delete elm[_])
     add.forEach(_ => (elm[_] = props[_]))
-    this._prevProps = props
   }
 }
