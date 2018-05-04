@@ -3,6 +3,7 @@
  */
 
 import {createElement} from './createElement'
+import {objectDiff} from './objectDiff'
 import {RDSet} from './RDSet'
 
 export class RDElement {
@@ -11,6 +12,7 @@ export class RDElement {
   private elmMap = new Map<number, Node>()
   private _prevStyle?: any
   private _prevProps?: any
+  private _prevAttrs?: any
 
   constructor(private sel: string) {
     this.elm = createElement(sel)
@@ -29,38 +31,25 @@ export class RDElement {
     this.elm.removeChild(this.elmMap.get(id) as Node)
   }
 
-  setAttrs(attrs: {[k: string]: string}) {
-    // remove old ones
-    for (var i = 0; i < this.elm.attributes.length; i++) {
-      const attr = this.elm.attributes.item(i)
-      if (!attrs[attr.name]) this.elm.removeAttribute(attr.name)
-    }
-
-    // add new ones
-    for (var k in attrs) if (attrs[k] !== this.elm.getAttribute(k)) this.elm.setAttribute(k, attrs[k])
+  setAttrs(attrs: any) {
+    const {add, del} = objectDiff(attrs, this._prevAttrs)
+    del.forEach(_ => this.elm.removeAttribute(_))
+    add.forEach(_ => this.elm.setAttribute(_, attrs[_]))
+    this._prevAttrs = attrs
   }
 
   setStyle(style: any) {
-    const elmStyle: any = this.elm.style
-
-    // remove old ones
-    if (this._prevStyle) for (let i in this._prevStyle) if (!style[i]) elmStyle.removeProperty(i)
-
-    // add new ones
-    for (let i in style) if (elmStyle[i] !== style[i]) elmStyle[i] = style[i]
-
+    const {add, del} = objectDiff(style, this._prevStyle)
+    del.forEach(_ => this.elm.style.removeProperty(_))
+    add.forEach(_ => this.elm.style.setProperty(_, style[_]))
     this._prevStyle = style
   }
 
   setProps(props: any) {
-    const elm: any = this.elm
-
-    // remove old ones
-    if (this._prevProps) for (let i in this._prevProps) if (!props[i]) delete elm[i]
-
-    // add new ones
-    for (let i in props) if (props[i] !== elm[i]) elm[i] = props[i]
-
+    const elm = this.elm as any
+    const {add, del} = objectDiff(props, this._prevProps)
+    del.forEach(_ => delete elm[_])
+    add.forEach(_ => (elm[_] = props[_]))
     this._prevProps = props
   }
 }
