@@ -11,7 +11,8 @@
     "lint": "git ls-files | grep .ts | xargs tslint",
     "lint:fix": "git ls-files | grep .ts | xargs tslint --fix",
     "test:watch": "karma start karma.config.js --browsers=ChromeHeadless",
-    "travis-deploy-once": "travis-deploy-once"
+    "travis-deploy-once": "travis-deploy-once",
+    "start": "webpack-dev-server --config demo/webpack.config.js"
   },
   "author": "Tushar Mathur <tusharmath@gmail.com>",
   "license": "ISC",
@@ -41,7 +42,9 @@
     "ts-loader": "^4.2.0",
     "tslint": "^5.10.0",
     "typescript": "^2.8.3",
-    "webpack": "^4.7.0"
+    "webpack": "^4.7.0",
+    "webpack-cli": "^2.1.2",
+    "webpack-dev-server": "^3.1.4"
   },
   "config": {
     "commitizen": {
