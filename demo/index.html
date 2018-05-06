@@ -3,33 +3,7 @@
     <title>Reactive DOM Demo</title>
     <meta name="viewport"
           content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
-    <style>
-
-        .filters a {
-            color: inherit;
-            margin: 3px;
-            padding: 3px 7px;
-            text-decoration: none;
-            border: 1px solid transparent;
-            border-radius: 3px;
-        }
-
-        .filters a.selected,
-        .filters a:hover {
-            border-color: rgba(175, 47, 47, 0.1);
-        }
-
-        .filters a.selected {
-            border-color: rgba(175, 47, 47, 0.2);
-        }
-    </style>
-    <link rel="stylesheet" href="https://cdn.rawgit.com/tastejs/todomvc-app-css/22ef1be7/index.css">
-    <script>
-        const COMPOSE_KEY = 'ap'
-        String.prototype[COMPOSE_KEY] = Boolean.prototype[COMPOSE_KEY] = Number.prototype[COMPOSE_KEY] = Object.prototype[COMPOSE_KEY] = function (fn, ctx) {
-          return fn.call(ctx, this)
-        }
-    </script>
+    <link rel="stylesheet" href="/demo/app.css">
     <script src="/demo.js"></script>
 </head>
 <body class="learn-bar">

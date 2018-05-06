@@ -83,7 +83,7 @@ const view = ({todo$, inputProps$, footerStyle$}: State) => {
       ]),
       h('section.main', [
         h('input.toggle-all', {props: {type: 'checkbox'}}),
-        h('label.toggle-all', ['Mark all as complete']),
+        h('label', {attrs: {for: 'toggle-all'}}, ['Mark all as complete']),
         O.switchMap(
           todo =>
             h(
