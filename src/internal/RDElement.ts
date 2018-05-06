@@ -27,7 +27,8 @@ export class RDElement {
   }
 
   removeChild(id: number) {
-    this.elm.removeChild(this.elmMap.get(id) as Node)
+    const node = this.elmMap.get(id)
+    if (node) this.elm.removeChild(node)
   }
 
   setAttrs(attrs: any) {

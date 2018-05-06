@@ -70,6 +70,14 @@ describe('HTMLElementObservable', () => {
       const expected = [EVENT.next(201, html(`<div>Happy Birthday</div>`))]
       assert.deepEqual(results, expected)
     })
+
+    it('should skip empty children', () => {
+      const SH = createTestScheduler()
+      const empty$ = SH.Hot(EVENT.complete(210))
+      const {results} = SH.start(() => h('div', ['Happy Birthday', empty$]))
+      const expected = [EVENT.next(201, html(`<div>Happy Birthday</div>`))]
+      assert.deepEqual(results, expected)
+    })
   })
   describe('attrs', () => {
     it('should set element attrs', () => {
