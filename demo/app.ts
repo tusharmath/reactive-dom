@@ -10,18 +10,24 @@ import {IObservable} from 'observable-air'
 import {h} from '../index'
 
 /**
+ * Sample todo-item
+ */
+type TodoItem = {done: boolean; text: string}
+
+/**
  * Real world data in an immutable format
  */
 type Input = {
   inputText$: IObservable<string>
-  storage$: IObservable<Array<string>>
+  storage$: IObservable<Array<TodoItem>>
+  hash$: IObservable<string>
 }
 
 /**
  * Represents the application state
  */
 type State = {
-  todo$: IObservable<Array<string>>
+  todo$: IObservable<Array<TodoItem>>
   inputProps$: IObservable<any>
   footerStyle$: IObservable<any>
 }
@@ -33,19 +39,12 @@ type State = {
  */
 const input = (document: Document): Input => {
   const inputText$ = O.multicast(
-    O.map(
-      (e: any) => e.target.value,
-      O.filter<KeyboardEvent>(i => i.key === 'Enter', O.fromDOM(document as any, 'keypress'))
-    )
+    O.map((e: any) => e.target.value, O.filter<KeyboardEvent>(i => i.key === 'Enter', O.fromDOM(document, 'keypress')))
   )
-  const storage$ = new O.Observable(ob => {
-    const OLD_DATA = localStorage.getItem('DATA')
-    if (OLD_DATA) ob.next(JSON.parse(OLD_DATA))
-    else ob.next([])
-    ob.complete()
-  })
-
-  return {inputText$, storage$}
+  const hash$ = O.multicast(O.map(() => window.location.hash, O.fromDOM(window, 'hashchange')))
+  const OLD_DATA = localStorage.getItem('DATA')
+  const storage$ = O.of(OLD_DATA ? JSON.parse(OLD_DATA) : [])
+  return {inputText$, storage$, hash$}
 }
 
 /**
@@ -54,15 +53,15 @@ const input = (document: Document): Input => {
  * @param {IObservable<Array<string>>} storage$
  * @returns {State}
  */
-const update = ({inputText$, storage$}: Input): State => {
+const update = ({inputText$, storage$, hash$}: Input): State => {
   const INPUT_PROPS = {placeholder: 'What need to be done?', autofocus: true, value: ''}
   const DISPLAY_NONE = {display: 'none'}
 
-  const text$ = O.filter(_ => _ !== '', inputText$)
+  const text$ = O.map(text => ({done: false, text}), O.filter(_ => _ !== '', inputText$))
   const todo$ = O.merge(O.flatMap(todo => O.scan((data, i) => [i, ...data], todo, text$), storage$), storage$)
   const inputProps$ = O.concat(O.of(INPUT_PROPS), O.mapTo(INPUT_PROPS, text$))
   const footerStyle$ = O.map(_ => (_.length > 0 ? {display: ''} : DISPLAY_NONE), todo$)
-  return {todo$, inputProps$, footerStyle$: footerStyle$}
+  return {todo$, inputProps$, footerStyle$}
 }
 
 /**
@@ -73,31 +72,31 @@ const update = ({inputText$, storage$}: Input): State => {
  * @returns {hReturnType}
  */
 const view = ({todo$, inputProps$, footerStyle$}: State) => {
+  const ListItem = (_: TodoItem) => {
+    const attrs = {
+      class: _.done ? 'completed' : ''
+    }
+    return h('li', {attrs}, [
+      h('input.toggle', {props: {type: 'checkbox'}}),
+      h('label', [_.text]),
+      h('button.destroy', [''])
+    ])
+  }
   return h('div', [
     h('section.todoapp', [
-      h('header.header', [
-        h('h1', ['todos']),
-        h('input.new-todo', {
-          props: inputProps$
-        })
-      ]),
+      h('header.header', [h('h1', ['todos']), h('input.new-todo', {props: inputProps$})]),
       h('section.main', [
         h('input.toggle-all', {props: {type: 'checkbox'}}),
         h('label', {attrs: {for: 'toggle-all'}}, ['Mark all as complete']),
-        O.switchMap(
-          todo =>
-            h(
-              'ul.todo-list',
-              todo.map(_ =>
-                h('li', [h('input.toggle', {props: {type: 'checkbox'}}), h('label', [_]), h('button.destroy', [''])])
-              )
-            ),
-          todo$
-        )
+        O.switchMap(todo => h('ul.todo-list', todo.map(ListItem)), todo$)
       ]),
       h('footer.footer', {style: footerStyle$}, [
         h('span.todo-count', [O.map(_ => `${_.length} items left`, todo$)]),
-        h('div.filters', [h('a.selected', ['All']), h('a', ['Active']), h('a', ['Completed'])]),
+        h('div.filters', [
+          h('a.selected', {props: {href: '#/'}}, ['All']),
+          h('a', {props: {href: '#/active'}}, ['Active']),
+          h('a', {props: {href: '#/completed'}}, ['Completed'])
+        ]),
         h('button.clear-completed', ['Clear Completed'])
       ])
     ]),
