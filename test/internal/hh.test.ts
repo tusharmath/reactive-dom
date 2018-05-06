@@ -8,6 +8,7 @@ import {log} from 'util'
 import {h} from '../../src/internal/hh'
 import {html} from '../../src/internal/html'
 
+declare function getEventListeners(elm: HTMLElement): any
 describe('HTMLElementObservable', () => {
   describe('children', () => {
     it('should append child to parent', () => {
@@ -214,6 +215,35 @@ describe('HTMLElementObservable', () => {
       const SH = createTestScheduler()
       const elm: any = SH.start(() => h('div', {props: {randomPROP: 'randomVAL'}}, ['A'])).results[0]
       assert.equal(elm.value.randomPROP, 'randomVAL')
+    })
+  })
+
+  describe('on', () => {
+    it('should attach an event listener', () => {
+      let clicked = false
+      const SH = createTestScheduler()
+      const onClick = () => {
+        clicked = true
+      }
+      const {results} = SH.subscribeTo(() => h('button', {on: {click: onClick}}))
+      SH.advanceTo(201)
+      const dom: HTMLElement = (results[0] as any).value
+      dom.click()
+      assert.strictEqual(results.toString(), '[object Object]')
+      assert.ok(clicked)
+    })
+
+    it('should detach the event listener on complete', () => {
+      let clicked = false
+      const SH = createTestScheduler()
+      const onClick = () => {
+        clicked = true
+      }
+      const {results} = SH.start(() => h('button', {on: {click: onClick}}))
+      const dom: HTMLElement = (results[0] as any).value
+      dom.click()
+      assert.strictEqual(results.toString(), '[object Object]')
+      assert.notOk(clicked)
     })
   })
 })

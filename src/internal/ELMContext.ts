@@ -75,4 +75,14 @@ export class ELMContext extends CompositeSubscription {
     this.elm.setProps(val)
     this.dispatch()
   }
+
+  addListeners(on: {[p: string]: EventListener}) {
+    this.elm.setListeners(on)
+    this.dispatch()
+  }
+
+  unsubscribe() {
+    this.elm.setListeners({})
+    super.unsubscribe()
+  }
 }

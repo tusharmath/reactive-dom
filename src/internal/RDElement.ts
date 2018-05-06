@@ -12,6 +12,7 @@ export class RDElement {
   private elmMap = new Map<number, Node>()
   private _prevStyle?: any
   private _prevAttrs?: any
+  private _on: {[p: string]: EventListener} = {}
 
   constructor(private sel: string) {
     this.elm = createElement(sel)
@@ -50,5 +51,12 @@ export class RDElement {
     const {add, del} = objectDiff(props, this.elm)
     del.forEach(_ => delete elm[_])
     add.forEach(_ => (elm[_] = props[_]))
+  }
+
+  setListeners(on: {[p: string]: EventListener}) {
+    const {add, del} = objectDiff(on, this._on)
+    del.forEach(_ => this.elm.removeEventListener(_, this._on[_]))
+    add.forEach(_ => this.elm.addEventListener(_, on[_]))
+    this._on = on
   }
 }
