@@ -23,6 +23,7 @@ type Input = {
 type State = {
   todo$: IObservable<Array<string>>
   inputProps$: IObservable<any>
+  footerStyle$: IObservable<any>
 }
 
 /**
@@ -55,10 +56,13 @@ const input = (document: Document): Input => {
  */
 const update = ({inputText$, storage$}: Input): State => {
   const INPUT_PROPS = {placeholder: 'What need to be done?', autofocus: true, value: ''}
+  const DISPLAY_NONE = {display: 'none'}
+
   const text$ = O.filter(_ => _ !== '', inputText$)
   const todo$ = O.merge(O.flatMap(todo => O.scan((data, i) => [i, ...data], todo, text$), storage$), storage$)
   const inputProps$ = O.concat(O.of(INPUT_PROPS), O.mapTo(INPUT_PROPS, text$))
-  return {todo$, inputProps$}
+  const footerStyle$ = O.map(_ => (_.length > 0 ? {display: ''} : DISPLAY_NONE), todo$)
+  return {todo$, inputProps$, footerStyle$: footerStyle$}
 }
 
 /**
@@ -67,35 +71,41 @@ const update = ({inputText$, storage$}: Input): State => {
  * @param {IObservable<any>} inputProps$
  * @returns {hReturnType}
  */
-const view = ({todo$, inputProps$}: State) => {
-  const DISPLAY_NONE = {display: 'none'}
-  const footerStyle$ = O.map(_ => (_.length > 0 ? {display: ''} : DISPLAY_NONE), todo$)
-  const ListItem = _ =>
-    h('li', [h('input.toggle', {props: {type: 'checkbox'}}), h('label', [_]), h('button.destroy', [''])])
-  const Footer = h('footer.info', [
-    h('p', ['Double-click to edit a todo']),
-    h('p', ['Written by', h('a', {props: {href: 'https://twitter.com/tusharmath'}}, ['Tushar Mathur'])]),
-    h('p', ['Part of', h('a', {props: {href: 'http://todomvc.com'}}, ['TodoMVC'])])
+const view = ({todo$, inputProps$, footerStyle$}: State) => {
+  return h('div', [
+    h('section.todoapp', [
+      h('header.header', [
+        h('h1', ['todos']),
+        h('input.new-todo', {
+          props: inputProps$
+        })
+      ]),
+      h('section.main', [
+        h('input.toggle-all', {props: {type: 'checkbox'}}),
+        h('label.toggle-all', ['Mark all as complete']),
+        O.switchMap(
+          todo =>
+            h(
+              'ul.todo-list',
+              todo.map(_ =>
+                h('li', [h('input.toggle', {props: {type: 'checkbox'}}), h('label', [_]), h('button.destroy', [''])])
+              )
+            ),
+          todo$
+        )
+      ]),
+      h('footer.footer', {style: footerStyle$}, [
+        h('span.todo-count', [O.map(_ => `${_.length} items left`, todo$)]),
+        h('div.filters', [h('a.selected', ['All']), h('a', ['Active']), h('a', ['Completed'])]),
+        h('button.clear-completed', ['Clear Completed'])
+      ])
+    ]),
+    h('footer.info', [
+      h('p', ['Double-click to edit a todo']),
+      h('p', ['Written by', h('a', {props: {href: 'https://twitter.com/tusharmath'}}, ['Tushar Mathur'])]),
+      h('p', ['Part of', h('a', {props: {href: 'http://todomvc.com'}}, ['TodoMVC'])])
+    ])
   ])
-  const TodoHeader = h('header.header', [
-    h('h1', ['todos']),
-    h('input.new-todo', {
-      props: inputProps$
-    })
-  ])
-  const TodoFooter = h('footer.footer', {style: footerStyle$}, [
-    h('span.todo-count', [O.map(_ => `${_.length} items left`, todo$)]),
-    h('div.filters', [h('a.selected', ['All']), h('a', ['Active']), h('a', ['Completed'])]),
-    h('button.clear-completed', ['Clear Completed'])
-  ])
-  const TodoList = h('section.main', [
-    h('input.toggle-all', {props: {type: 'checkbox'}}),
-    h('label.toggle-all', ['Mark all as complete']),
-    O.switchMap(todo => {
-      return h('ul.todo-list', todo.map(ListItem))
-    }, todo$)
-  ])
-  return h('div', [h('section.todoapp', [TodoHeader, TodoList, TodoFooter]), Footer])
 }
 
 const state = update(input(document))
