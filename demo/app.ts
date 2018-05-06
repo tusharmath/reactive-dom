@@ -69,6 +69,7 @@ const update = ({inputText$, storage$}: Input): State => {
  * Converts the state into an actual functioning DOM tree
  * @param {IObservable<Array<string>>} todo$
  * @param {IObservable<any>} inputProps$
+ * @param footerStyle$
  * @returns {hReturnType}
  */
 const view = ({todo$, inputProps$, footerStyle$}: State) => {
