@@ -3,12 +3,14 @@ language: node_js
 addons:
   chrome: stable
 cache:
+  yarn: true
   directories:
     - ~/.npm
+    - node_modules
 notifications:
   email: false
 node_js:
-  - 'stable'
+  - stable
 script:
   - yarn tsc -d
   - yarn lint
