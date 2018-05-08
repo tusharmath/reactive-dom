@@ -8,7 +8,6 @@ import {log} from 'util'
 import {h} from '../src/HyperScriptElement'
 import {html} from './__helpers__/html'
 
-declare function getEventListeners(elm: HTMLElement): any
 describe('HTMLElementObservable', () => {
   describe('children', () => {
     it('should append child to parent', () => {
