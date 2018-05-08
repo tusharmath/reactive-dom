@@ -3,6 +3,6 @@
  */
 
 import {Observable} from 'observable-air'
-import {Insertable} from './Insertable'
+import {Insertable} from '../Insertable'
 
 export const hStatic = (text: Insertable) => new Observable<Insertable>(observer => observer.next(text))

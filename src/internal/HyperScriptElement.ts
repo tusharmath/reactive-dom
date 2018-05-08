@@ -2,11 +2,11 @@ import * as O from 'observable-air'
 import {IObserver, IScheduler, ISubscription} from 'observable-air'
 import {ChildObserver} from './ChildObserver'
 import {ELMContext} from './ELMContext'
-import {hStatic} from './hStatic'
+import {hStatic} from './helpers/hStatic'
+import {isObservable} from './helpers/isObservable'
 import {Insertable} from './Insertable'
-import {isObservable} from './isObservable'
 
-class HH implements O.IObservable<Insertable> {
+class HyperScriptElement implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
   subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
     const ctx = new ELMContext(this.sel, observer, scheduler)
@@ -45,10 +45,10 @@ export function h(sel: string, children: hChildren): hReturnType
 export function h(sel: string, data: hData, children: hChildren): hReturnType
 export function h(...t: any[]): hReturnType {
   return t.length === 3
-    ? new HH(t[0], t[1], t[2])
+    ? new HyperScriptElement(t[0], t[1], t[2])
     : t.length === 2
       ? t[1] instanceof Array
-        ? new HH(t[0], {}, t[1])
-        : new HH(t[0], t[1], [])
-      : new HH(t[0], {}, [])
+        ? new HyperScriptElement(t[0], {}, t[1])
+        : new HyperScriptElement(t[0], t[1], [])
+      : new HyperScriptElement(t[0], {}, [])
 }

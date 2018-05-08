@@ -5,8 +5,8 @@
 import {assert} from 'chai'
 import {createTestScheduler, EVENT} from 'observable-air/test'
 import {log} from 'util'
-import {h} from '../../src/internal/hh'
-import {html} from '../../src/internal/html'
+import {h} from '../../src/internal/HyperScriptElement'
+import {html} from '../helpers/html'
 
 declare function getEventListeners(elm: HTMLElement): any
 describe('HTMLElementObservable', () => {

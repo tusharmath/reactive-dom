@@ -5,8 +5,8 @@
 import {IObserver, ISubscription} from 'observable-air'
 import {LinkedListNode} from 'observable-air/src/internal/LinkedList'
 import {ELMContext} from './ELMContext'
+import {toNode} from './helpers/toNode'
 import {Insertable} from './Insertable'
-import {toNode} from './toNode'
 
 export class ChildObserver implements IObserver<Insertable> {
   ref?: LinkedListNode<ISubscription>

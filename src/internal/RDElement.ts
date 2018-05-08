@@ -2,8 +2,8 @@
  * Created by tushar on 04/05/18
  */
 
-import {createElement} from './createElement'
-import {objectDiff} from './objectDiff'
+import {createElement} from './helpers/createElement'
+import {objectDiff} from './helpers/objectDiff'
 import {RDSet} from './RDSet'
 
 export class RDElement {
