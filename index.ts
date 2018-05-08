@@ -1,1 +1,1 @@
-export {h} from './src/internal/HyperScriptElement'
+export {h} from './src/HyperScriptElement'

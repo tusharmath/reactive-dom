@@ -1,10 +1,10 @@
 import * as O from 'observable-air'
 import {IObserver, IScheduler, ISubscription} from 'observable-air'
-import {ChildObserver} from './ChildObserver'
-import {ELMContext} from './ELMContext'
-import {hStatic} from './helpers/hStatic'
-import {isObservable} from './helpers/isObservable'
-import {Insertable} from './Insertable'
+import {ChildObserver} from './internal/ChildObserver'
+import {ELMContext} from './internal/ELMContext'
+import {hStatic} from './internal/helpers/hStatic'
+import {isObservable} from './internal/helpers/isObservable'
+import {Insertable} from './internal/Insertable'
 
 class HyperScriptElement implements O.IObservable<Insertable> {
   constructor(private sel: string, private data: hData, private children: hChildren) {}
