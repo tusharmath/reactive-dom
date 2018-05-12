@@ -3,12 +3,12 @@
  */
 
 import {assert} from 'chai'
-import {RDElement} from '../../src/internal/RDElement'
+import {ELMPatcher} from '../../src/internal/ELMPatcher'
 
-describe('RDElement', () => {
+describe('ELMPatcher', () => {
   describe('patch', () => {
     it('should update attributes', () => {
-      const elm = new RDElement({
+      const elm = new ELMPatcher({
         sel: 'div.container',
         attrs: {
           data: 'carbon-di-oxide'
@@ -18,7 +18,7 @@ describe('RDElement', () => {
       assert.equal(actual, `<div class="container" data="carbon-di-oxide"></div>`)
     })
     it('should update props', () => {
-      const elm = new RDElement({
+      const elm = new ELMPatcher({
         sel: 'div.container',
         props: {
           id: 'carbon-di-oxide'
@@ -27,7 +27,7 @@ describe('RDElement', () => {
       assert.equal(elm.getElm().id, 'carbon-di-oxide')
     })
     it('should update styles', () => {
-      const elm = new RDElement({
+      const elm = new ELMPatcher({
         sel: 'div.container',
         style: {
           color: 'red'
@@ -39,7 +39,7 @@ describe('RDElement', () => {
     it('should add event listeners', () => {
       let count = 0
       const onClick = () => count++
-      const elm = new RDElement({
+      const elm = new ELMPatcher({
         sel: 'div.container',
         on: {
           click: onClick
@@ -52,13 +52,13 @@ describe('RDElement', () => {
     context('already initialized', () => {
       context('and same selector', () => {
         it('should not throw', () => {
-          const elm = new RDElement({sel: 'div.whoopy'})
+          const elm = new ELMPatcher({sel: 'div.whoopy'})
           assert.doesNotThrow(() => elm.patch({sel: 'div.whoopy'}))
         })
       })
       context('diff selector', () => {
         it('should throw', () => {
-          const elm = new RDElement({sel: 'div.container'})
+          const elm = new ELMPatcher({sel: 'div.container'})
           assert.throws(() => elm.patch({sel: 'div.container-2'}), 'Element already initialized')
         })
       })
@@ -66,12 +66,12 @@ describe('RDElement', () => {
   })
   describe('addAt()', () => {
     it('should return RDElement', () => {
-      const rd = new RDElement({sel: 'ul'})
+      const rd = new ELMPatcher({sel: 'ul'})
       const child = rd.addAt({sel: 'li'}, 0)
-      assert.instanceOf(child, RDElement)
+      assert.instanceOf(child, ELMPatcher)
     })
     it('should append child', () => {
-      const rd = new RDElement({sel: 'ul'})
+      const rd = new ELMPatcher({sel: 'ul'})
       rd.addAt({sel: 'li'}, 0)
       const actual = rd.getElm().outerHTML
       const expected = `<ul><li></li></ul>`
@@ -79,7 +79,7 @@ describe('RDElement', () => {
     })
 
     it('should maintain order', () => {
-      const rd = new RDElement({sel: 'ul'})
+      const rd = new ELMPatcher({sel: 'ul'})
       rd.addAt({sel: 'li.__7'}, 7)
       rd.addAt({sel: 'li.__1'}, 1)
       const actual = rd.getElm().outerHTML
@@ -89,7 +89,7 @@ describe('RDElement', () => {
 
     context('index is same', () => {
       it('should apply the diff', () => {
-        const rd = new RDElement({sel: 'ul'})
+        const rd = new ELMPatcher({sel: 'ul'})
         rd.addAt({sel: 'li', style: {color: 'red'}}, 7)
         rd.addAt({sel: 'li', style: {color: 'green'}}, 7)
         const actual = rd.getElm().outerHTML
@@ -98,7 +98,7 @@ describe('RDElement', () => {
       })
 
       it('should not create a new element', () => {
-        const rd = new RDElement({sel: 'ul'})
+        const rd = new ELMPatcher({sel: 'ul'})
         rd.addAt({sel: 'li', style: {color: 'red'}}, 7)
         const node0 = rd.getElm().childNodes[0]
         rd.addAt({sel: 'li', style: {color: 'green'}}, 7)
@@ -108,7 +108,7 @@ describe('RDElement', () => {
 
       context('selector is diff', () => {
         it('should create a new child', () => {
-          const rd = new RDElement({sel: 'ul'})
+          const rd = new ELMPatcher({sel: 'ul'})
           rd.addAt({sel: 'li.aaa'}, 7)
           rd.addAt({sel: 'li.bbb'}, 7)
           const actual = rd.getElm().outerHTML
@@ -118,7 +118,7 @@ describe('RDElement', () => {
 
         it('should remove event listeners', () => {
           let count = 0
-          const rd = new RDElement({sel: 'ul'})
+          const rd = new ELMPatcher({sel: 'ul'})
           const onClick = () => count++
           rd.addAt({sel: 'li.aaa', on: {click: onClick}}, 7)
           const node = rd.getElm().childNodes[0]
@@ -131,7 +131,7 @@ describe('RDElement', () => {
   })
   describe('removeAt()', () => {
     it('should remove dom node', () => {
-      const rd = new RDElement({sel: 'ul'})
+      const rd = new ELMPatcher({sel: 'ul'})
       rd.addAt({sel: 'li.__7'}, 7)
       rd.addAt({sel: 'li.__1'}, 1)
       rd.addAt({sel: 'li.__3'}, 3)
@@ -143,7 +143,7 @@ describe('RDElement', () => {
     it('should remove listeners from the removed node', () => {
       let count = 0
       const onClick = () => count++
-      const rd = new RDElement({sel: 'ul'})
+      const rd = new ELMPatcher({sel: 'ul'})
       rd.addAt({sel: 'li.__7', on: {click: onClick}}, 7)
       rd.addAt({sel: 'li.__1', on: {click: onClick}}, 1)
       rd.addAt({sel: 'li.__3', on: {click: onClick}}, 3)

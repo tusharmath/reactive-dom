@@ -10,10 +10,10 @@ import {RDAttributes, RDEventListeners, RDProps, RDStyles, VNode} from './VNode'
 /**
  * Provides low-level DOM APIs to update/mutate real dom nodes.
  */
-export class RDElement {
+export class ELMPatcher {
   private elm?: HTMLElement
   private set = new RDSet()
-  private elmMap = new Map<number, RDElement>()
+  private elmMap = new Map<number, ELMPatcher>()
   private style?: RDStyles
   private attrs?: RDAttributes
   private on?: RDEventListeners
@@ -50,10 +50,10 @@ export class RDElement {
     this.on = on
   }
 
-  private getChildRDElm(node: VNode, id: number): RDElement {
-    return this.elmMap.has(id) && (this.elmMap.get(id) as RDElement).sel === node.sel
-      ? (this.elmMap.get(id) as RDElement)
-      : new RDElement(node)
+  private getChildRDElm(node: VNode, id: number): ELMPatcher {
+    return this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).sel === node.sel
+      ? (this.elmMap.get(id) as ELMPatcher)
+      : new ELMPatcher(node)
   }
   private init(sel: string) {
     if (this.sel === sel) return
@@ -70,19 +70,19 @@ export class RDElement {
     throw new Error('Element has not be initialized')
   }
 
-  addAt(node: VNode, id: number): RDElement {
+  addAt(node: VNode, id: number): ELMPatcher {
     const rd = this.getChildRDElm(node, id)
     const child = rd.getElm()
 
-    if (this.elmMap.has(id) && (this.elmMap.get(id) as RDElement).sel !== node.sel) {
-      const oldRDElement = this.elmMap.get(id) as RDElement
+    if (this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).sel !== node.sel) {
+      const oldRDElement = this.elmMap.get(id) as ELMPatcher
       this.getElm().replaceChild(child, oldRDElement.getElm())
       oldRDElement.setListeners({})
-    } else if (this.elmMap.has(id) && (this.elmMap.get(id) as RDElement).sel === node.sel) {
-      const child = this.elmMap.get(id) as RDElement
+    } else if (this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).sel === node.sel) {
+      const child = this.elmMap.get(id) as ELMPatcher
       child.patch(node)
     } else if (Number.isFinite(this.set.gte(id))) {
-      const referenceNode = this.elmMap.get(this.set.gte(id)) as RDElement
+      const referenceNode = this.elmMap.get(this.set.gte(id)) as ELMPatcher
       this.getElm().insertBefore(child, referenceNode.getElm())
     } else {
       this.getElm().appendChild(child)
