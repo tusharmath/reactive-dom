@@ -10,17 +10,19 @@ import {toNode} from './helpers/toNode'
 import {Insertable} from './Insertable'
 import {MetaObserver} from './MetaObserver'
 import {RDElement} from './RDElement'
+import {VNode} from './VNode'
 
 export class ELMContext extends CompositeSubscription {
   private dispatched = false
-  private readonly elm = new RDElement(this.sel)
+  private readonly elm = new RDElement()
   constructor(private sel: string, private sink: O.IObserver<Insertable>, private sh: IScheduler) {
     super()
+    this.elm.init(sel)
   }
 
   private dispatch() {
     if (!this.dispatched) {
-      this.sink.next(this.elm.elm)
+      this.sink.next(this.elm.getElm())
       this.dispatched = true
     }
   }
