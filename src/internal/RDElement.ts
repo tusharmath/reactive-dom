@@ -8,20 +8,20 @@ import {RDSet} from './RDSet'
 import {RDAttributes, RDEventListeners, RDProps, RDStyles, VNode} from './VNode'
 
 export class RDElement {
-  private _elm?: HTMLElement
+  private elm?: HTMLElement
   private set = new RDSet()
   private elmMap = new Map<number, Node>()
-  private _prevStyle?: any
-  private _prevAttrs?: any
-  private _on: RDEventListeners = {}
+  private style?: any
+  private attrs?: any
+  private on?: RDEventListeners
 
   getElm() {
-    if (this._elm) return this._elm
+    if (this.elm) return this.elm
     throw new Error('Element has not be initialized')
   }
 
   init(sel: string) {
-    this._elm = createElement(sel)
+    this.elm = createElement(sel)
   }
 
   addChild(elm: Node, id: number) {
@@ -40,17 +40,17 @@ export class RDElement {
   }
 
   setAttrs(attrs: RDAttributes) {
-    const {add, del} = objectDiff(attrs, this._prevAttrs)
+    const {add, del} = objectDiff(attrs, this.attrs)
     del.forEach(_ => this.getElm().removeAttribute(_))
     add.forEach(_ => this.getElm().setAttribute(_, attrs[_]))
-    this._prevAttrs = attrs
+    this.attrs = attrs
   }
 
   setStyle(style: RDStyles) {
-    const {add, del} = objectDiff(style, this._prevStyle)
+    const {add, del} = objectDiff(style, this.style)
     del.forEach(_ => this.getElm().style.removeProperty(_))
     add.forEach(_ => this.getElm().style.setProperty(_, (style as any)[_]))
-    this._prevStyle = style
+    this.style = style
   }
 
   setProps(props: RDProps) {
@@ -61,14 +61,14 @@ export class RDElement {
   }
 
   setListeners(on: RDEventListeners) {
-    const {add, del} = objectDiff(on, this._on)
-    del.forEach(_ => this.getElm().removeEventListener(_, this._on[_]))
+    const {add, del} = objectDiff(on, this.on)
+    del.forEach(_ => this.getElm().removeEventListener(_, this.on[_]))
     add.forEach(_ => this.getElm().addEventListener(_, on[_]))
-    this._on = on
+    this.on = on
   }
 
   patch(node: VNode) {
-    if (!this._elm) this.init(node.sel)
+    if (!this.elm) this.init(node.sel)
     if (node.attrs) this.setAttrs(node.attrs)
     if (node.props) this.setProps(node.props)
     if (node.style) this.setStyle(node.style)
