@@ -7,6 +7,9 @@ import {objectDiff} from './helpers/objectDiff'
 import {RDSet} from './RDSet'
 import {RDAttributes, RDEventListeners, RDProps, RDStyles, VNode} from './VNode'
 
+/**
+ * Provides low-level DOM APIs to update/mutate real dom nodes.
+ */
 export class RDElement {
   private elm?: HTMLElement
   private set = new RDSet()
@@ -24,7 +27,7 @@ export class RDElement {
     this.elm = createElement(sel)
   }
 
-  addChild(elm: Node, id: number) {
+  addAt(elm: Node, id: number) {
     const child = elm
     if (this.set.has(id)) this.getElm().replaceChild(child, this.getElm().childNodes[id])
     else if (Number.isFinite(this.set.gte(id)))
@@ -34,7 +37,7 @@ export class RDElement {
     this.elmMap.set(id, child)
   }
 
-  removeChild(id: number) {
+  removeAt(id: number) {
     const node = this.elmMap.get(id)
     if (node) this.getElm().removeChild(node)
   }

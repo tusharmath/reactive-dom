@@ -51,7 +51,7 @@ export class ELMContext extends CompositeSubscription {
   }
 
   removeChild(id: number) {
-    this.elm.removeChild(id)
+    this.elm.removeAt(id)
   }
 
   error(err: Error) {
@@ -59,7 +59,7 @@ export class ELMContext extends CompositeSubscription {
   }
 
   addChild(val: Insertable, id: number) {
-    this.elm.addChild(toNode(val), id)
+    this.elm.addAt(toNode(val), id)
     this.dispatch()
   }
 
