@@ -106,6 +106,5 @@ export class RDElement {
     if (node.props) this.setProps(node.props)
     if (node.style) this.setStyle(node.style)
     if (node.on) this.setListeners(node.on)
-    return this
   }
 }
