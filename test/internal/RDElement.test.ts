@@ -55,4 +55,13 @@ describe('RDElement', () => {
       assert.equal(count, 1, 'No event listeners were attached')
     })
   })
+  describe('init()', () => {
+    context('already initialized', () => {
+      it('should throw', () => {
+        const elm = new RDElement()
+        elm.init('div.whoopy')
+        assert.throws(() => elm.init('div.whoopie'), 'Element already initialized')
+      })
+    })
+  })
 })

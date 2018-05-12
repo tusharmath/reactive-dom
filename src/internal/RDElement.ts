@@ -24,6 +24,7 @@ export class RDElement {
   }
 
   init(sel: string) {
+    if (this.elm) throw new Error('Element already initialized')
     this.elm = createElement(sel)
   }
 
