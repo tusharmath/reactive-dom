@@ -62,7 +62,10 @@ export class RDElement {
 
   setListeners(on: RDEventListeners) {
     const {add, del} = objectDiff(on, this.on)
-    del.forEach(_ => this.getElm().removeEventListener(_, this.on[_]))
+    del.forEach(_ => {
+      if (this.on) return this.getElm().removeEventListener(_, this.on[_])
+    })
+
     add.forEach(_ => this.getElm().addEventListener(_, on[_]))
     this.on = on
   }
