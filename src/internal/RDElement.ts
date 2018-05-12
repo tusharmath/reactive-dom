@@ -70,7 +70,7 @@ export class RDElement {
     throw new Error('Element has not be initialized')
   }
 
-  addAt(node: VNode, id: number) {
+  addAt(node: VNode, id: number): RDElement {
     const rd = this.getChildRDElm(node, id)
     const child = rd.getElm()
 
@@ -89,6 +89,7 @@ export class RDElement {
     }
     this.set = this.set.add(id)
     this.elmMap.set(id, rd)
+    return rd
   }
 
   removeAt(id: number) {

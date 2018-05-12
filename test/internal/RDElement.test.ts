@@ -65,6 +65,11 @@ describe('RDElement', () => {
     })
   })
   describe('addAt()', () => {
+    it('should return RDElement', () => {
+      const rd = new RDElement({sel: 'ul'})
+      const child = rd.addAt({sel: 'li'}, 0)
+      assert.instanceOf(child, RDElement)
+    })
     it('should append child', () => {
       const rd = new RDElement({sel: 'ul'})
       rd.addAt({sel: 'li'}, 0)
