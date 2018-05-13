@@ -7,7 +7,9 @@ import {objectDiff} from '../../../src/internal/helpers/objectDiff'
 
 describe('objectDiff', () => {
   it('should return common', () => {
-    const {com} = objectDiff({a: 1}, {b: 2, a: 20})
+    const {add, com, del} = objectDiff(new Set(['a', 'c']), new Set(['a', 'b']))
     assert.deepEqual(com, ['a'])
+    assert.deepEqual(del, ['b'])
+    assert.deepEqual(add, ['c'])
   })
 })

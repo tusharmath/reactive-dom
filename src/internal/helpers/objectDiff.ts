@@ -4,18 +4,22 @@
 
 /**
  * Calculates the diff between two objects
- * @param curr
- * @param prev
- * @returns {{add: String[]; del: String[], com: String[]}}
+ * @param {Set} curr
+ * @param {Set} prev
+ * @returns {{add: any[]; del: any[], com: any[]}}
  */
-export const objectDiff = (curr: any, prev?: any) => {
-  const add: Array<string> = []
-  const del: Array<string> = []
-  const com: Array<string> = []
-  if (prev)
-    for (let i in prev)
-      if (prev.hasOwnProperty(i) && !curr.hasOwnProperty(i)) del.push(i)
-      else com.push(i)
-  for (let i in curr) if (curr.hasOwnProperty(i) && (!prev || prev[i] !== curr[i])) add.push(i)
+export const objectDiff = <T>(curr: Set<T>, prev: Set<T>) => {
+  const add: Array<T> = []
+  const del: Array<T> = []
+  const com: Array<T> = []
+
+  for (var i of curr) {
+    if (prev.has(i)) com.push(i)
+    else add.push(i)
+  }
+
+  for (var i of prev) {
+    if (!curr.has(i)) del.push(i)
+  }
   return {add, del, com}
 }
