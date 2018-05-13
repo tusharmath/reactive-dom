@@ -12,12 +12,12 @@ import {RDAttributes, RDEventListeners, RDProps, RDStyles, VNode} from './VNode'
  */
 export class ELMPatcher {
   private elm?: HTMLElement
-  private set = new RDSet()
-  private elmMap = new Map<number, ELMPatcher>()
   private style?: RDStyles
   private attrs?: RDAttributes
   private on?: RDEventListeners
   private sel?: string
+  private set = new RDSet()
+  private elmMap = new Map<number, ELMPatcher>()
 
   private setAttrs(attrs: RDAttributes) {
     const {add, del} = objectDiff(attrs, this.attrs)
