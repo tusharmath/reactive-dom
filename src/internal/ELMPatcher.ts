@@ -26,7 +26,6 @@ export class ELMPatcher {
   private elm?: HTMLElement
   private vNode?: VNode
 
-  private style = new Set<string>()
   private attrs = new Set<string>()
   private props = new Set<string>()
   private children: Array<VNode> = []
@@ -42,13 +41,21 @@ export class ELMPatcher {
   }
 
   private setStyle(style: RDStyles) {
-    const curr = new Set(Object.keys(style))
-    const {add, del, com} = objectDiff(curr, this.style)
-    del.forEach(_ => this.getElm().style.removeProperty(_))
-    add
-      .concat(com)
-      .forEach(_ => this.getElm().style.setProperty(_, (style as any)[_]))
-    this.style = curr
+    const prevStyle = this.vNode ? this.vNode.style : undefined
+    const stringNames = Object.keys(style)
+    if (prevStyle) {
+      const curr = new Set(stringNames)
+      const prev = new Set(Object.keys(prevStyle))
+      const {add, del, com} = objectDiff(curr, prev)
+      del.forEach(_ => this.getElm().style.removeProperty(_))
+      add
+        .concat(com)
+        .forEach(_ => this.getElm().style.setProperty(_, (style as any)[_]))
+    } else {
+      stringNames.forEach(_ =>
+        this.getElm().style.setProperty(_, (style as any)[_])
+      )
+    }
   }
 
   private setProps(props: RDProps) {
@@ -61,14 +68,14 @@ export class ELMPatcher {
   }
 
   private setListeners(on: RDEventListeners) {
-    const currentEventListeners = this.vNode ? this.vNode.on : undefined
+    const prevEventListeners = this.vNode ? this.vNode.on : undefined
     const eventNames = Object.keys(on)
-    if (currentEventListeners) {
+    if (prevEventListeners) {
       const curr = new Set(eventNames)
-      const prev = new Set(Object.keys(currentEventListeners))
+      const prev = new Set(Object.keys(prevEventListeners))
       const {add, del} = objectDiff(curr, prev)
       del.forEach(_ =>
-        this.getElm().removeEventListener(_, currentEventListeners[_])
+        this.getElm().removeEventListener(_, prevEventListeners[_])
       )
       add.forEach(_ => this.getElm().addEventListener(_, on[_]))
     } else {
