@@ -25,14 +25,13 @@ function getChildrenIndexMap(children: Array<VNode>): {[p: string]: number} {
 export class ELMPatcher {
   private elm?: HTMLElement
 
-  private vNode?: VNode
-  private on: RDEventListeners = {}
   private style = new Set<string>()
   private attrs = new Set<string>()
   private props = new Set<string>()
   private children: Array<VNode> = []
   private set = new RDSet()
   private elmMap = new Map<number, ELMPatcher>()
+  private vNode?: VNode
 
   private setAttrs(attrs: RDAttributes) {
     const curr = new Set(Object.keys(attrs))
@@ -62,15 +61,19 @@ export class ELMPatcher {
   }
 
   private setListeners(on: RDEventListeners) {
-    const curr = new Set(Object.keys(on))
-    const prev = new Set(Object.keys(this.on))
-    const {add, del} = objectDiff(curr, prev)
-    del.forEach(_ => {
-      if (this.on) return this.getElm().removeEventListener(_, this.on[_])
-    })
-
-    add.forEach(_ => this.getElm().addEventListener(_, on[_]))
-    this.on = on
+    const currentEventListeners = this.vNode ? this.vNode.on : undefined
+    const eventNames = Object.keys(on)
+    if (currentEventListeners) {
+      const curr = new Set(eventNames)
+      const prev = new Set(Object.keys(currentEventListeners))
+      const {add, del} = objectDiff(curr, prev)
+      del.forEach(_ =>
+        this.getElm().removeEventListener(_, currentEventListeners[_])
+      )
+      add.forEach(_ => this.getElm().addEventListener(_, on[_]))
+    } else {
+      eventNames.forEach(_ => this.getElm().addEventListener(_, on[_]))
+    }
   }
 
   private getChildRDElm(node: VNode, id: number): ELMPatcher {
@@ -85,7 +88,6 @@ export class ELMPatcher {
     if (this.vNode && this.vNode.sel === sel) return
     if (this.elm) throw new Error('Element already initialized')
     this.elm = createElement(sel)
-    this.vNode = vNode
   }
 
   private patchChildren(children: Array<VNode>) {
@@ -175,5 +177,6 @@ export class ELMPatcher {
     if (node.on) this.setListeners(node.on)
     else this.setListeners({})
     if (node.children) this.patchChildren(node.children)
+    this.vNode = node
   }
 }
