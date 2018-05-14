@@ -18,8 +18,10 @@ export type RDEventListeners = {
 
 export type VNode = {
   sel: string
+  key?: string
   attrs?: RDAttributes
   props?: RDProps
   style?: RDStyles
   on?: RDEventListeners
+  children?: Array<VNode>
 }

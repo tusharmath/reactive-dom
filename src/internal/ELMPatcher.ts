@@ -7,41 +7,62 @@ import {objectDiff} from './helpers/objectDiff'
 import {RDSet} from './RDSet'
 import {RDAttributes, RDEventListeners, RDProps, RDStyles, VNode} from './VNode'
 
+function getKey(vNode: VNode, i: number) {
+  return vNode.sel + '.' + (vNode.key ? vNode.key : i.toString())
+}
+
+function vNodeReducer(p: any, c: VNode, i: number) {
+  return {...p, [getKey(c, i)]: i}
+}
+
+function getChildrenIndexMap(children: Array<VNode>): {[p: string]: number} {
+  return children.reduce(vNodeReducer, {})
+}
+
 /**
  * Provides low-level DOM APIs to update/mutate real dom nodes.
  */
 export class ELMPatcher {
   private elm?: HTMLElement
-  private style?: RDStyles
-  private attrs?: RDAttributes
-  private on?: RDEventListeners
   private sel?: string
+
+  private on: RDEventListeners = {}
+  private style = new Set<string>()
+  private attrs = new Set<string>()
+  private props = new Set<string>()
+  private children: Array<VNode> = []
   private set = new RDSet()
   private elmMap = new Map<number, ELMPatcher>()
 
   private setAttrs(attrs: RDAttributes) {
-    const {add, del} = objectDiff(attrs, this.attrs)
+    const curr = new Set(Object.keys(attrs))
+    const {add, del} = objectDiff(curr, this.attrs)
     del.forEach(_ => this.getElm().removeAttribute(_))
     add.forEach(_ => this.getElm().setAttribute(_, attrs[_]))
-    this.attrs = attrs
+    this.attrs = curr
   }
 
   private setStyle(style: RDStyles) {
-    const {add, del} = objectDiff(style, this.style)
+    const curr = new Set(Object.keys(style))
+    const {add, del, com} = objectDiff(curr, this.style)
     del.forEach(_ => this.getElm().style.removeProperty(_))
-    add.forEach(_ => this.getElm().style.setProperty(_, (style as any)[_]))
-    this.style = style
+    add.concat(com).forEach(_ => this.getElm().style.setProperty(_, (style as any)[_]))
+    this.style = curr
   }
 
   private setProps(props: RDProps) {
+    const curr = new Set(Object.keys(props))
     const elm = this.getElm() as any
-    const {add, del} = objectDiff(props, elm)
+    const {add, del, com} = objectDiff(curr, this.props)
     del.forEach(_ => delete elm[_])
-    add.forEach(_ => (elm[_] = props[_]))
+    add.concat(com).forEach(_ => (elm[_] = props[_]))
+    this.props = curr
   }
 
   private setListeners(on: RDEventListeners) {
-    const {add, del} = objectDiff(on, this.on)
+    const curr = new Set(Object.keys(on))
+    const prev = new Set(Object.keys(this.on))
+    const {add, del} = objectDiff(curr, prev)
     del.forEach(_ => {
       if (this.on) return this.getElm().removeEventListener(_, this.on[_])
     })
@@ -55,6 +76,7 @@ export class ELMPatcher {
       ? (this.elmMap.get(id) as ELMPatcher)
       : new ELMPatcher(node)
   }
+
   private init(sel: string) {
     if (this.sel === sel) return
     if (this.elm) throw new Error('Element already initialized')
@@ -62,15 +84,19 @@ export class ELMPatcher {
     this.sel = sel
   }
 
-  constructor(node: VNode) {
-    this.patch(node)
-  }
-  getElm() {
-    if (this.elm) return this.elm
-    throw new Error('Element has not be initialized')
+  private patchChildren(children: Array<VNode>) {
+    const curr = new Set(children.map(getKey))
+    const prev = new Set(this.children.map(getKey))
+    const {add, del, com} = objectDiff(curr, prev)
+    const currentChildrenIndexMap = getChildrenIndexMap(children)
+    const prevChildrenIndexMap = getChildrenIndexMap(this.children)
+    del.forEach(_ => this.removeAt(prevChildrenIndexMap[_]))
+    add.forEach(_ => this.addAt(children[currentChildrenIndexMap[_]], currentChildrenIndexMap[_]))
+    com.forEach(_ => this.patchAt(children[currentChildrenIndexMap[_]], currentChildrenIndexMap[_]))
+    this.children = children
   }
 
-  addAt(node: VNode, id: number): ELMPatcher {
+  private addAt(node: VNode, id: number): ELMPatcher {
     const rd = this.getChildRDElm(node, id)
     const child = rd.getElm()
 
@@ -92,12 +118,28 @@ export class ELMPatcher {
     return rd
   }
 
-  removeAt(id: number) {
+  private patchAt(node: VNode, id: number) {
+    const child = this.elmMap.get(id) as ELMPatcher
+    child.patch(node)
+  }
+
+  private removeAt(id: number) {
     const node = this.elmMap.get(id)
     if (node) {
       this.getElm().removeChild(node.getElm())
       node.setListeners({})
+      this.set = this.set.remove(id)
+      this.elmMap.delete(id)
     }
+  }
+
+  constructor(node: VNode) {
+    this.patch(node)
+  }
+
+  getElm() {
+    if (this.elm) return this.elm
+    throw new Error('Element has not be initialized')
   }
 
   patch(node: VNode) {
@@ -106,5 +148,7 @@ export class ELMPatcher {
     if (node.props) this.setProps(node.props)
     if (node.style) this.setStyle(node.style)
     if (node.on) this.setListeners(node.on)
+    else this.setListeners({})
+    if (node.children) this.patchChildren(node.children)
   }
 }
