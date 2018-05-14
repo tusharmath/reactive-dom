@@ -24,8 +24,8 @@ function getChildrenIndexMap(children: Array<VNode>): {[p: string]: number} {
  */
 export class ELMPatcher {
   private elm?: HTMLElement
-  private sel?: string
 
+  private vNode?: VNode
   private on: RDEventListeners = {}
   private style = new Set<string>()
   private attrs = new Set<string>()
@@ -72,16 +72,17 @@ export class ELMPatcher {
   }
 
   private getChildRDElm(node: VNode, id: number): ELMPatcher {
-    return this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).sel === node.sel
+    return this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).getVNode().sel === node.sel
       ? (this.elmMap.get(id) as ELMPatcher)
       : new ELMPatcher(node)
   }
 
-  private init(sel: string) {
-    if (this.sel === sel) return
+  private init(vNode: VNode) {
+    const sel = vNode.sel
+    if (this.vNode && this.vNode.sel === sel) return
     if (this.elm) throw new Error('Element already initialized')
     this.elm = createElement(sel)
-    this.sel = sel
+    this.vNode = vNode
   }
 
   private patchChildren(children: Array<VNode>) {
@@ -100,11 +101,11 @@ export class ELMPatcher {
     const rd = this.getChildRDElm(node, id)
     const child = rd.getElm()
 
-    if (this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).sel !== node.sel) {
+    if (this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).getVNode().sel !== node.sel) {
       const oldRDElement = this.elmMap.get(id) as ELMPatcher
       this.getElm().replaceChild(child, oldRDElement.getElm())
       oldRDElement.setListeners({})
-    } else if (this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).sel === node.sel) {
+    } else if (this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).getVNode().sel === node.sel) {
       const child = this.elmMap.get(id) as ELMPatcher
       child.patch(node)
     } else if (Number.isFinite(this.set.gte(id))) {
@@ -137,13 +138,18 @@ export class ELMPatcher {
     this.patch(node)
   }
 
+  getVNode() {
+    if (this.vNode) return this.vNode
+    throw new Error('VNode has not been set')
+  }
+
   getElm() {
     if (this.elm) return this.elm
     throw new Error('Element has not be initialized')
   }
 
   patch(node: VNode) {
-    this.init(node.sel)
+    this.init(node)
     if (node.attrs) this.setAttrs(node.attrs)
     if (node.props) this.setProps(node.props)
     if (node.style) this.setStyle(node.style)
