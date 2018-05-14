@@ -24,14 +24,14 @@ function getChildrenIndexMap(children: Array<VNode>): {[p: string]: number} {
  */
 export class ELMPatcher {
   private elm?: HTMLElement
+  private vNode?: VNode
 
   private style = new Set<string>()
   private attrs = new Set<string>()
   private props = new Set<string>()
   private children: Array<VNode> = []
-  private set = new RDSet()
+  private positions = new RDSet()
   private elmMap = new Map<number, ELMPatcher>()
-  private vNode?: VNode
 
   private setAttrs(attrs: RDAttributes) {
     const curr = new Set(Object.keys(attrs))
@@ -129,13 +129,15 @@ export class ELMPatcher {
     ) {
       const child = this.elmMap.get(id) as ELMPatcher
       child.patch(node)
-    } else if (Number.isFinite(this.set.gte(id))) {
-      const referenceNode = this.elmMap.get(this.set.gte(id)) as ELMPatcher
+    } else if (Number.isFinite(this.positions.gte(id))) {
+      const referenceNode = this.elmMap.get(
+        this.positions.gte(id)
+      ) as ELMPatcher
       this.getElm().insertBefore(child, referenceNode.getElm())
     } else {
       this.getElm().appendChild(child)
     }
-    this.set = this.set.add(id)
+    this.positions = this.positions.add(id)
     this.elmMap.set(id, rd)
     return rd
   }
@@ -150,7 +152,7 @@ export class ELMPatcher {
     if (node) {
       this.getElm().removeChild(node.getElm())
       node.setListeners({})
-      this.set = this.set.remove(id)
+      this.positions = this.positions.remove(id)
       this.elmMap.delete(id)
     }
   }
