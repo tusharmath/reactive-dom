@@ -26,18 +26,24 @@ export class ELMPatcher {
   private elm?: HTMLElement
   private vNode?: VNode
 
-  private attrs = new Set<string>()
   private props = new Set<string>()
   private children: Array<VNode> = []
   private positions = new RDSet()
   private elmMap = new Map<number, ELMPatcher>()
 
   private setAttrs(attrs: RDAttributes) {
-    const curr = new Set(Object.keys(attrs))
-    const {add, del} = objectDiff(curr, this.attrs)
-    del.forEach(_ => this.getElm().removeAttribute(_))
-    add.forEach(_ => this.getElm().setAttribute(_, attrs[_]))
-    this.attrs = curr
+    const prevAttrs = this.vNode ? this.vNode.attrs : undefined
+    const attrNames = Object.keys(attrs)
+
+    if (prevAttrs) {
+      const curr = new Set(attrNames)
+      const prev = new Set(Object.keys(prevAttrs))
+      const {add, del} = objectDiff(curr, prev)
+      del.forEach(_ => this.getElm().removeAttribute(_))
+      add.forEach(_ => this.getElm().setAttribute(_, attrs[_]))
+    } else {
+      attrNames.forEach(_ => this.getElm().setAttribute(_, attrs[_]))
+    }
   }
 
   private setStyle(style: RDStyles) {
