@@ -38,7 +38,10 @@ describe('Set', () => {
 
     context('beyond 32', () => {
       it('should throw an error', () => {
-        assert.throws(() => new RDSet().add(32), 'id should remain between 0-31')
+        assert.throws(
+          () => new RDSet().add(32),
+          'id should remain between 0-31'
+        )
       })
 
       // TODO: skip until BigInt() support is available on chrome

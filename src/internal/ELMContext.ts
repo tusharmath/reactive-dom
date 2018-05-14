@@ -15,7 +15,11 @@ import {VNode} from './VNode'
 export class ELMContext extends CompositeSubscription {
   private dispatched = false
   private readonly elm = new ELMPatcher()
-  constructor(private sel: string, private sink: O.IObserver<Insertable>, private sh: IScheduler) {
+  constructor(
+    private sel: string,
+    private sink: O.IObserver<Insertable>,
+    private sh: IScheduler
+  ) {
     super()
     this.elm.init(sel)
   }

@@ -10,7 +10,9 @@ export type RDProps = {
   [key: string]: any
 }
 
-export type RDStyles = {[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}
+export type RDStyles = {
+  [key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]
+}
 
 export type RDEventListeners = {
   [key: string]: EventListener

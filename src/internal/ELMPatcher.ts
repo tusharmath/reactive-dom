@@ -46,7 +46,9 @@ export class ELMPatcher {
     const curr = new Set(Object.keys(style))
     const {add, del, com} = objectDiff(curr, this.style)
     del.forEach(_ => this.getElm().style.removeProperty(_))
-    add.concat(com).forEach(_ => this.getElm().style.setProperty(_, (style as any)[_]))
+    add
+      .concat(com)
+      .forEach(_ => this.getElm().style.setProperty(_, (style as any)[_]))
     this.style = curr
   }
 
@@ -72,7 +74,8 @@ export class ELMPatcher {
   }
 
   private getChildRDElm(node: VNode, id: number): ELMPatcher {
-    return this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).getVNode().sel === node.sel
+    return this.elmMap.has(id) &&
+      (this.elmMap.get(id) as ELMPatcher).getVNode().sel === node.sel
       ? (this.elmMap.get(id) as ELMPatcher)
       : new ELMPatcher(node)
   }
@@ -92,8 +95,18 @@ export class ELMPatcher {
     const currentChildrenIndexMap = getChildrenIndexMap(children)
     const prevChildrenIndexMap = getChildrenIndexMap(this.children)
     del.forEach(_ => this.removeAt(prevChildrenIndexMap[_]))
-    add.forEach(_ => this.addAt(children[currentChildrenIndexMap[_]], currentChildrenIndexMap[_]))
-    com.forEach(_ => this.patchAt(children[currentChildrenIndexMap[_]], currentChildrenIndexMap[_]))
+    add.forEach(_ =>
+      this.addAt(
+        children[currentChildrenIndexMap[_]],
+        currentChildrenIndexMap[_]
+      )
+    )
+    com.forEach(_ =>
+      this.patchAt(
+        children[currentChildrenIndexMap[_]],
+        currentChildrenIndexMap[_]
+      )
+    )
     this.children = children
   }
 
@@ -101,11 +114,17 @@ export class ELMPatcher {
     const rd = this.getChildRDElm(node, id)
     const child = rd.getElm()
 
-    if (this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).getVNode().sel !== node.sel) {
+    if (
+      this.elmMap.has(id) &&
+      (this.elmMap.get(id) as ELMPatcher).getVNode().sel !== node.sel
+    ) {
       const oldRDElement = this.elmMap.get(id) as ELMPatcher
       this.getElm().replaceChild(child, oldRDElement.getElm())
       oldRDElement.setListeners({})
-    } else if (this.elmMap.has(id) && (this.elmMap.get(id) as ELMPatcher).getVNode().sel === node.sel) {
+    } else if (
+      this.elmMap.has(id) &&
+      (this.elmMap.get(id) as ELMPatcher).getVNode().sel === node.sel
+    ) {
       const child = this.elmMap.get(id) as ELMPatcher
       child.patch(node)
     } else if (Number.isFinite(this.set.gte(id))) {

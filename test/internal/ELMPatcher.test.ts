@@ -15,7 +15,10 @@ describe('ELMPatcher', () => {
         }
       })
       const actual = elm.getElm().outerHTML
-      assert.equal(actual, `<div class="container" data="carbon-di-oxide"></div>`)
+      assert.equal(
+        actual,
+        `<div class="container" data="carbon-di-oxide"></div>`
+      )
     })
     it('should update props', () => {
       const elm = new ELMPatcher({
@@ -76,7 +79,10 @@ describe('ELMPatcher', () => {
       const rd = new ELMPatcher({sel: 'ul'})
       rd.patch({sel: 'ul', children: [{sel: 'li.__7'}]})
       rd.patch({sel: 'ul', children: [{sel: 'li.__1'}, {sel: 'li.__7'}]})
-      rd.patch({sel: 'ul', children: [{sel: 'li.__1'}, {sel: 'li.__3'}, {sel: 'li.__7'}]})
+      rd.patch({
+        sel: 'ul',
+        children: [{sel: 'li.__1'}, {sel: 'li.__3'}, {sel: 'li.__7'}]
+      })
       rd.patch({sel: 'ul', children: [{sel: 'li.__3'}, {sel: 'li.__7'}]})
       const actual = rd.getElm().outerHTML
       const expected = `<ul><li class="__3"></li><li class="__7"></li></ul>`
@@ -86,7 +92,13 @@ describe('ELMPatcher', () => {
       let count = 0
       const onClick = () => count++
       const rd = new ELMPatcher({sel: 'ul'})
-      rd.patch({sel: 'ul', children: [{sel: 'li.__1', on: {click: onClick}}, {sel: 'li.__2', on: {click: onClick}}]})
+      rd.patch({
+        sel: 'ul',
+        children: [
+          {sel: 'li.__1', on: {click: onClick}},
+          {sel: 'li.__2', on: {click: onClick}}
+        ]
+      })
       const node = rd.getElm().childNodes[1]
       rd.patch({sel: 'ul', children: [{sel: 'li.__1', on: {click: onClick}}]})
       node.dispatchEvent(new Event('click'))
@@ -102,7 +114,10 @@ describe('ELMPatcher', () => {
       context('diff selector', () => {
         it('should throw', () => {
           const elm = new ELMPatcher({sel: 'div.container'})
-          assert.throws(() => elm.patch({sel: 'div.container-2'}), 'Element already initialized')
+          assert.throws(
+            () => elm.patch({sel: 'div.container-2'}),
+            'Element already initialized'
+          )
         })
       })
     })
@@ -139,7 +154,10 @@ describe('ELMPatcher', () => {
           let count = 0
           const rd = new ELMPatcher({sel: 'ul'})
           const onClick = () => count++
-          rd.patch({sel: 'ul', children: [{sel: 'li.aaa', on: {click: onClick}}]})
+          rd.patch({
+            sel: 'ul',
+            children: [{sel: 'li.aaa', on: {click: onClick}}]
+          })
           const node = rd.getElm().childNodes[0]
           rd.patch({sel: 'ul', children: [{sel: 'li.aaa'}, {sel: 'li.bbb'}]})
           node.dispatchEvent(new Event('click'))

@@ -39,9 +39,17 @@ type State = {
  */
 const input = (document: Document): Input => {
   const inputText$ = O.multicast(
-    O.map((e: any) => e.target.value, O.filter<KeyboardEvent>(i => i.key === 'Enter', O.fromDOM(document, 'keypress')))
+    O.map(
+      (e: any) => e.target.value,
+      O.filter<KeyboardEvent>(
+        i => i.key === 'Enter',
+        O.fromDOM(document, 'keypress')
+      )
+    )
   )
-  const hash$ = O.multicast(O.map(() => window.location.hash, O.fromDOM(window, 'hashchange')))
+  const hash$ = O.multicast(
+    O.map(() => window.location.hash, O.fromDOM(window, 'hashchange'))
+  )
   const OLD_DATA = localStorage.getItem('DATA')
   const storage$ = O.of(OLD_DATA ? JSON.parse(OLD_DATA) : [])
   return {inputText$, storage$, hash$}
@@ -54,13 +62,26 @@ const input = (document: Document): Input => {
  * @returns {State}
  */
 const update = ({inputText$, storage$, hash$}: Input): State => {
-  const INPUT_PROPS = {placeholder: 'What need to be done?', autofocus: true, value: ''}
+  const INPUT_PROPS = {
+    placeholder: 'What need to be done?',
+    autofocus: true,
+    value: ''
+  }
   const DISPLAY_NONE = {display: 'none'}
 
-  const text$ = O.map(text => ({done: false, text}), O.filter(_ => _ !== '', inputText$))
-  const todo$ = O.merge(O.flatMap(todo => O.scan((data, i) => [i, ...data], todo, text$), storage$), storage$)
+  const text$ = O.map(
+    text => ({done: false, text}),
+    O.filter(_ => _ !== '', inputText$)
+  )
+  const todo$ = O.merge(
+    O.flatMap(todo => O.scan((data, i) => [i, ...data], todo, text$), storage$),
+    storage$
+  )
   const inputProps$ = O.concat(O.of(INPUT_PROPS), O.mapTo(INPUT_PROPS, text$))
-  const footerStyle$ = O.map(_ => (_.length > 0 ? {display: ''} : DISPLAY_NONE), todo$)
+  const footerStyle$ = O.map(
+    _ => (_.length > 0 ? {display: ''} : DISPLAY_NONE),
+    todo$
+  )
   return {todo$, inputProps$, footerStyle$}
 }
 
@@ -84,7 +105,10 @@ const view = ({todo$, inputProps$, footerStyle$}: State) => {
   }
   return h('div', [
     h('section.todoapp', [
-      h('header.header', [h('h1', ['todos']), h('input.new-todo', {props: inputProps$})]),
+      h('header.header', [
+        h('h1', ['todos']),
+        h('input.new-todo', {props: inputProps$})
+      ]),
       h('section.main', [
         h('input.toggle-all', {props: {type: 'checkbox'}}),
         h('label', {attrs: {for: 'toggle-all'}}, ['Mark all as complete']),
@@ -102,8 +126,16 @@ const view = ({todo$, inputProps$, footerStyle$}: State) => {
     ]),
     h('footer.info', [
       h('p', ['Double-click to edit a todo']),
-      h('p', ['Written by', h('a', {props: {href: 'https://twitter.com/tusharmath'}}, ['Tushar Mathur'])]),
-      h('p', ['Part of', h('a', {props: {href: 'http://todomvc.com'}}, ['TodoMVC'])])
+      h('p', [
+        'Written by',
+        h('a', {props: {href: 'https://twitter.com/tusharmath'}}, [
+          'Tushar Mathur'
+        ])
+      ]),
+      h('p', [
+        'Part of',
+        h('a', {props: {href: 'http://todomvc.com'}}, ['TodoMVC'])
+      ])
     ])
   ])
 }
@@ -114,4 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
   O.forEach(i => document.body.appendChild(i), view(state))
 })
 
-O.forEach(data => localStorage.setItem('DATA', JSON.stringify(data)), state.todo$)
+O.forEach(
+  data => localStorage.setItem('DATA', JSON.stringify(data)),
+  state.todo$
+)

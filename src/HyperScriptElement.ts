@@ -7,8 +7,15 @@ import {isObservable} from './internal/helpers/isObservable'
 import {Insertable} from './internal/Insertable'
 
 class HyperScriptElement implements O.IObservable<Insertable> {
-  constructor(private sel: string, private data: hData, private children: hChildren) {}
-  subscribe(observer: IObserver<Insertable>, scheduler: IScheduler): ISubscription {
+  constructor(
+    private sel: string,
+    private data: hData,
+    private children: hChildren
+  ) {}
+  subscribe(
+    observer: IObserver<Insertable>,
+    scheduler: IScheduler
+  ): ISubscription {
     const ctx = new ELMContext(this.sel, observer, scheduler)
     const {on, attrs, style, props} = this.data
     if (attrs) ctx.attach(ctx.setAttrs, attrs)
@@ -33,7 +40,9 @@ export type hReturnType = O.IObservable<HTMLElement>
 export type hData = {
   attrs?: O.IObservable<{[key: string]: string}> | {[key: string]: string}
   style?:
-    | O.IObservable<{[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}>
+    | O.IObservable<
+        {[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}
+      >
     | {[key in keyof CSSStyleDeclaration]?: CSSStyleDeclaration[key]}
   props?: O.IObservable<{[key: string]: any}> | {[key: string]: any}
   on?: {[key: string]: EventListener}
