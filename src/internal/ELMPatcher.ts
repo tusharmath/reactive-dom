@@ -134,13 +134,13 @@ export class ELMPatcher {
     }
   }
 
-  constructor(node: VNode) {
-    this.patch(node)
-  }
-
-  getVNode() {
+  private getVNode() {
     if (this.vNode) return this.vNode
     throw new Error('VNode has not been set')
+  }
+
+  constructor(node: VNode) {
+    this.patch(node)
   }
 
   getElm() {
