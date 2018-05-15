@@ -18,6 +18,8 @@ export type RDEventListeners = {
   [key: string]: EventListener
 }
 
+export type AnyVNode = VNode | string | number
+
 export type VNode = {
   sel: string
   key?: string
@@ -25,5 +27,5 @@ export type VNode = {
   props?: RDProps
   style?: RDStyles
   on?: RDEventListeners
-  children?: Array<VNode>
+  children?: Array<AnyVNode>
 }

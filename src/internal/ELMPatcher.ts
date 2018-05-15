@@ -5,29 +5,69 @@
 import {createElement} from './helpers/createElement'
 import {objectDiff} from './helpers/objectDiff'
 import {RDSet} from './RDSet'
-import {RDAttributes, RDEventListeners, RDProps, RDStyles, VNode} from './VNode'
+import {
+  AnyVNode,
+  RDAttributes,
+  RDEventListeners,
+  RDProps,
+  RDStyles,
+  VNode
+} from './VNode'
 
-function getKey(vNode: VNode, i: number) {
-  return vNode.sel + '.' + (vNode.key ? vNode.key : i.toString())
+const isVNode = (elm: any): elm is VNode => {
+  return !(typeof elm === 'string' || typeof elm === 'number')
+}
+function getKey(vNode: AnyVNode, i: number): string {
+  return isVNode(vNode)
+    ? vNode.sel + '.' + (vNode.key ? vNode.key : i.toString())
+    : vNode.toString()
 }
 
-function vNodeReducer(p: any, c: VNode, i: number) {
+function vNodeReducer(p: any, c: AnyVNode, i: number) {
   return {...p, [getKey(c, i)]: i}
 }
 
-function getChildrenIndexMap(children: Array<VNode>): {[p: string]: number} {
+function getChildrenIndexMap(children: Array<AnyVNode>): {[p: string]: number} {
   return children.reduce(vNodeReducer, {})
+}
+
+export interface IPatcher {
+  patch(node: AnyVNode): void
+  getElm(): Node
+  isSimilar(node: AnyVNode): boolean
+  dispose(): void
+}
+
+export class TextPatcher implements IPatcher {
+  private elm?: Text
+  constructor(elm: string | number) {
+    this.patch(elm)
+  }
+  patch(node: string | number) {
+    this.elm = document.createTextNode(node.toString())
+  }
+
+  getElm() {
+    if (this.elm) return this.elm
+    throw new Error('Uninitialized Patcher')
+  }
+
+  isSimilar(node: AnyVNode): boolean {
+    return true
+  }
+
+  dispose(): void {}
 }
 
 /**
  * Provides low-level DOM APIs to update/mutate real dom nodes.
  */
-export class ELMPatcher {
-  private elm?: HTMLElement
+export class ELMPatcher implements IPatcher {
+  private elm?: Node
   private vNode?: VNode
 
   private positions = new RDSet()
-  private childPatchers = new Map<number, ELMPatcher>()
+  private childPatchers = new Map<number, IPatcher>()
 
   private setAttrs(attrs: RDAttributes, prevAttrs: RDAttributes) {
     const attrNames = Object.keys(attrs)
@@ -77,23 +117,29 @@ export class ELMPatcher {
     add.forEach(_ => this.getElm().addEventListener(_, on[_]))
   }
 
-  private getChildRDElm(node: VNode, id: number): ELMPatcher {
-    return this.childPatchers.has(id) &&
-      (this.childPatchers.get(id) as ELMPatcher).getVNode().sel === node.sel
-      ? (this.childPatchers.get(id) as ELMPatcher)
-      : new ELMPatcher(node)
+  private getChildRDElm(node: AnyVNode, id: number): IPatcher {
+    return isVNode(node)
+      ? this.childPatchers.has(id) &&
+        (this.childPatchers.get(id) as ELMPatcher).getVNode().sel === node.sel
+        ? (this.childPatchers.get(id) as ELMPatcher)
+        : new ELMPatcher(node)
+      : new TextPatcher(node)
   }
 
-  private init(vNode: VNode) {
-    const sel = vNode.sel
-    if (this.vNode && this.vNode.sel === sel) return
-    if (this.elm) throw new Error('Element already initialized')
-    this.elm = createElement(sel)
+  private init(vNode: AnyVNode) {
+    if (isVNode(vNode)) {
+      const sel = vNode.sel
+      if (this.vNode && this.vNode.sel === sel) return
+      if (this.elm) throw new Error('Element already initialized')
+      this.elm = createElement(sel)
+    } else {
+      this.elm = document.createTextNode(vNode.toString())
+    }
   }
 
   private patchChildren(
-    children: Array<VNode>,
-    previousChildren: Array<VNode>
+    children: Array<AnyVNode>,
+    previousChildren: Array<AnyVNode>
   ) {
     const curr = new Set(children.map(getKey))
     const prev = new Set(previousChildren.map(getKey))
@@ -115,22 +161,17 @@ export class ELMPatcher {
     )
   }
 
-  private addAt(node: VNode, id: number): ELMPatcher {
+  private addAt(node: AnyVNode, id: number): IPatcher {
     const rd = this.getChildRDElm(node, id)
     const child = rd.getElm()
+    const childPatcher = this.childPatchers.get(id)
 
-    if (
-      this.childPatchers.has(id) &&
-      (this.childPatchers.get(id) as ELMPatcher).getVNode().sel !== node.sel
-    ) {
+    if (childPatcher && childPatcher.isSimilar(node)) {
       const oldRDElement = this.childPatchers.get(id) as ELMPatcher
       this.getElm().replaceChild(child, oldRDElement.getElm())
       oldRDElement.removeEventListeners()
-    } else if (
-      this.childPatchers.has(id) &&
-      (this.childPatchers.get(id) as ELMPatcher).getVNode().sel === node.sel
-    ) {
-      const child = this.childPatchers.get(id) as ELMPatcher
+    } else if (childPatcher && !childPatcher.isSimilar(node)) {
+      const child = this.childPatchers.get(id) as IPatcher
       child.patch(node)
     } else if (Number.isFinite(this.positions.gte(id))) {
       const referenceNode = this.childPatchers.get(
@@ -145,8 +186,8 @@ export class ELMPatcher {
     return rd
   }
 
-  private patchAt(node: VNode, id: number) {
-    const child = this.childPatchers.get(id) as ELMPatcher
+  private patchAt(node: AnyVNode, id: number) {
+    const child = this.childPatchers.get(id) as IPatcher
     child.patch(node)
   }
 
@@ -154,7 +195,7 @@ export class ELMPatcher {
     const node = this.childPatchers.get(id)
     if (node) {
       this.getElm().removeChild(node.getElm())
-      node.removeEventListeners()
+      node.dispose()
       this.positions = this.positions.remove(id)
       this.childPatchers.delete(id)
     }
@@ -169,8 +210,9 @@ export class ELMPatcher {
     this.patch(node)
   }
 
-  getElm() {
-    if (this.elm) return this.elm
+  getElm(): HTMLElement {
+    // TODO: typecasting should be removed
+    if (this.elm) return this.elm as HTMLElement
     throw new Error('Element has not be initialized')
   }
 
@@ -188,5 +230,13 @@ export class ELMPatcher {
     this.setListeners(node.on || {}, on)
     if (node.children) this.patchChildren(node.children, children)
     this.vNode = node
+  }
+
+  isSimilar(node: AnyVNode): boolean {
+    return isVNode(node) && this.getVNode().sel !== node.sel
+  }
+
+  dispose(): void {
+    this.removeEventListeners()
   }
 }

@@ -182,7 +182,10 @@ describe('ELMPatcher', () => {
       it('should append child', () => {
         const rd = new ELMPatcher({sel: 'ul'})
         rd.patch({sel: 'ul', children: [{sel: 'li.__0', key: '0'}]})
-        rd.patch({sel: 'ul', children: [{sel: 'li.__0', key: '0'}, {sel: 'li.__1', key: '1'}]})
+        rd.patch({
+          sel: 'ul',
+          children: [{sel: 'li.__0', key: '0'}, {sel: 'li.__1', key: '1'}]
+        })
         const actual = rd.getElm().outerHTML
         const expected = `<ul><li class="__0"></li><li class="__1"></li></ul>`
         assert.equal(actual, expected)
@@ -206,6 +209,29 @@ describe('ELMPatcher', () => {
         rd.patch({sel: 'ul', children: [{sel: 'li.__3'}, {sel: 'li.__7'}]})
         const actual = rd.getElm().outerHTML
         const expected = `<ul><li class="__3"></li><li class="__7"></li></ul>`
+        assert.equal(actual, expected)
+      })
+      it('should set internal text', () => {
+        const elm = new ELMPatcher({
+          sel: 'div',
+          children: ['APPLE']
+        })
+        const actual = elm.getElm().outerHTML
+        const expected = `<div>APPLE</div>`
+        assert.equal(actual, expected)
+      })
+
+      it('should update internal text', () => {
+        const elm = new ELMPatcher({
+          sel: 'div',
+          children: ['A']
+        })
+        elm.patch({
+          sel: 'div',
+          children: ['B']
+        })
+        const actual = elm.getElm().outerHTML
+        const expected = `<div>B</div>`
         assert.equal(actual, expected)
       })
     })
