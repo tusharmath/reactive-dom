@@ -29,37 +29,24 @@ export class ELMPatcher {
   private positions = new RDSet()
   private elmMap = new Map<number, ELMPatcher>()
 
-  private setAttrs(attrs: RDAttributes) {
-    const prevAttrs = this.vNode ? this.vNode.attrs : undefined
+  private setAttrs(attrs: RDAttributes, prevAttrs: RDAttributes) {
     const attrNames = Object.keys(attrs)
-
-    if (prevAttrs) {
-      const curr = new Set(attrNames)
-      const prev = new Set(Object.keys(prevAttrs))
-      const {add, del} = objectDiff(curr, prev)
-      del.forEach(_ => this.getElm().removeAttribute(_))
-      add.forEach(_ => this.getElm().setAttribute(_, attrs[_]))
-    } else {
-      attrNames.forEach(_ => this.getElm().setAttribute(_, attrs[_]))
-    }
+    const curr = new Set(attrNames)
+    const prev = new Set(Object.keys(prevAttrs))
+    const {add, del} = objectDiff(curr, prev)
+    del.forEach(_ => this.getElm().removeAttribute(_))
+    add.forEach(_ => this.getElm().setAttribute(_, attrs[_]))
   }
 
-  private setStyle(style: RDStyles) {
-    const prevStyle = this.vNode ? this.vNode.style : undefined
+  private setStyle(style: RDStyles, prevStyle: RDStyles) {
     const stringNames = Object.keys(style)
-    if (prevStyle) {
-      const curr = new Set(stringNames)
-      const prev = new Set(Object.keys(prevStyle))
-      const {add, del, com} = objectDiff(curr, prev)
-      del.forEach(_ => this.getElm().style.removeProperty(_))
-      add
-        .concat(com)
-        .forEach(_ => this.getElm().style.setProperty(_, (style as any)[_]))
-    } else {
-      stringNames.forEach(_ =>
-        this.getElm().style.setProperty(_, (style as any)[_])
-      )
-    }
+    const curr = new Set(stringNames)
+    const prev = new Set(Object.keys(prevStyle))
+    const {add, del, com} = objectDiff(curr, prev)
+    del.forEach(_ => this.getElm().style.removeProperty(_))
+    add
+      .concat(com)
+      .forEach(_ => this.getElm().style.setProperty(_, (style as any)[_]))
   }
 
   private setProps(props: RDProps, prevProps: RDProps) {
@@ -71,20 +58,23 @@ export class ELMPatcher {
     add.concat(com).forEach(_ => (elm[_] = props[_]))
   }
 
-  private setListeners(on: RDEventListeners) {
-    const prevEventListeners = this.vNode ? this.vNode.on : undefined
+  private removeEventListeners() {
+    const {on = {}} = this.vNode ? this.vNode : {}
+    this.setListeners({}, on)
+  }
+
+  private setListeners(
+    on: RDEventListeners,
+    prevEventListeners: RDEventListeners
+  ) {
     const eventNames = Object.keys(on)
-    if (prevEventListeners) {
-      const curr = new Set(eventNames)
-      const prev = new Set(Object.keys(prevEventListeners))
-      const {add, del} = objectDiff(curr, prev)
-      del.forEach(_ =>
-        this.getElm().removeEventListener(_, prevEventListeners[_])
-      )
-      add.forEach(_ => this.getElm().addEventListener(_, on[_]))
-    } else {
-      eventNames.forEach(_ => this.getElm().addEventListener(_, on[_]))
-    }
+    const curr = new Set(eventNames)
+    const prev = new Set(Object.keys(prevEventListeners))
+    const {add, del} = objectDiff(curr, prev)
+    del.forEach(_ =>
+      this.getElm().removeEventListener(_, prevEventListeners[_])
+    )
+    add.forEach(_ => this.getElm().addEventListener(_, on[_]))
   }
 
   private getChildRDElm(node: VNode, id: number): ELMPatcher {
@@ -135,7 +125,7 @@ export class ELMPatcher {
     ) {
       const oldRDElement = this.elmMap.get(id) as ELMPatcher
       this.getElm().replaceChild(child, oldRDElement.getElm())
-      oldRDElement.setListeners({})
+      oldRDElement.removeEventListeners()
     } else if (
       this.elmMap.has(id) &&
       (this.elmMap.get(id) as ELMPatcher).getVNode().sel === node.sel
@@ -164,7 +154,7 @@ export class ELMPatcher {
     const node = this.elmMap.get(id)
     if (node) {
       this.getElm().removeChild(node.getElm())
-      node.setListeners({})
+      node.removeEventListeners()
       this.positions = this.positions.remove(id)
       this.elmMap.delete(id)
     }
@@ -187,15 +177,16 @@ export class ELMPatcher {
   patch(node: VNode) {
     this.init(node)
 
-    const {style = {}, attrs = {}, props = {}, children = []} = this.vNode
+    const {style = {}, attrs = {}, props = {}, children = [], on = {}} = this
+      .vNode
       ? this.vNode
       : {}
 
-    if (node.attrs) this.setAttrs(node.attrs)
+    if (node.attrs) this.setAttrs(node.attrs, attrs)
     if (node.props) this.setProps(node.props, props)
-    if (node.style) this.setStyle(node.style)
-    if (node.on) this.setListeners(node.on)
-    else this.setListeners({})
+    if (node.style) this.setStyle(node.style, style)
+    if (node.on) this.setListeners(node.on, on)
+    else this.removeEventListeners()
     if (node.children) this.patchChildren(node.children, children)
     this.vNode = node
   }
