@@ -165,5 +165,39 @@ describe('ELMPatcher', () => {
         })
       })
     })
+
+    describe('style', () => {
+      context('style key is removed', () => {
+        it('should remove the styles from dom elm', () => {
+          const elm = new ELMPatcher({sel: 'div.whoopy', style: {color: 'red'}})
+          elm.patch({sel: 'div.whoopy'})
+          const actual = elm.getElm().outerHTML
+          const expected = `<div class="whoopy" style=""></div>`
+          assert.equal(actual, expected)
+        })
+      })
+    })
+    describe('attrs', () => {
+      context('attrs key is removed', () => {
+        it('should remove the attrs from dom elm', () => {
+          const elm = new ELMPatcher({sel: 'a', attrs: {href: '/a'}})
+          elm.patch({sel: 'a'})
+          const actual = elm.getElm().outerHTML
+          const expected = `<a></a>`
+          assert.equal(actual, expected)
+        })
+      })
+    })
+    describe('props', () => {
+      context('props key is removed', () => {
+        it('should remove the props from dom elm', () => {
+          const elm: any = new ELMPatcher({sel: 'h1', props: {asd: 'ALPHA'}})
+          assert.ok(elm.getElm().asd)
+          elm.patch({sel: 'h1'})
+          const actual = elm.getElm().asd
+          assert.isUndefined(actual)
+        })
+      })
+    })
   })
 })

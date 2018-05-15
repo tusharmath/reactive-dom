@@ -182,11 +182,10 @@ export class ELMPatcher {
       ? this.vNode
       : {}
 
-    if (node.attrs) this.setAttrs(node.attrs, attrs)
-    if (node.props) this.setProps(node.props, props)
-    if (node.style) this.setStyle(node.style, style)
-    if (node.on) this.setListeners(node.on, on)
-    else this.removeEventListeners()
+    this.setAttrs(node.attrs || {}, attrs)
+    this.setProps(node.props || {}, props)
+    this.setStyle(node.style || {}, style)
+    this.setListeners(node.on || {}, on)
     if (node.children) this.patchChildren(node.children, children)
     this.vNode = node
   }
