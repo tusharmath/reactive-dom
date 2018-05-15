@@ -27,7 +27,7 @@ export class ELMPatcher {
   private vNode?: VNode
 
   private positions = new RDSet()
-  private elmMap = new Map<number, ELMPatcher>()
+  private childPatchers = new Map<number, ELMPatcher>()
 
   private setAttrs(attrs: RDAttributes, prevAttrs: RDAttributes) {
     const attrNames = Object.keys(attrs)
@@ -78,9 +78,9 @@ export class ELMPatcher {
   }
 
   private getChildRDElm(node: VNode, id: number): ELMPatcher {
-    return this.elmMap.has(id) &&
-      (this.elmMap.get(id) as ELMPatcher).getVNode().sel === node.sel
-      ? (this.elmMap.get(id) as ELMPatcher)
+    return this.childPatchers.has(id) &&
+      (this.childPatchers.get(id) as ELMPatcher).getVNode().sel === node.sel
+      ? (this.childPatchers.get(id) as ELMPatcher)
       : new ELMPatcher(node)
   }
 
@@ -120,20 +120,20 @@ export class ELMPatcher {
     const child = rd.getElm()
 
     if (
-      this.elmMap.has(id) &&
-      (this.elmMap.get(id) as ELMPatcher).getVNode().sel !== node.sel
+      this.childPatchers.has(id) &&
+      (this.childPatchers.get(id) as ELMPatcher).getVNode().sel !== node.sel
     ) {
-      const oldRDElement = this.elmMap.get(id) as ELMPatcher
+      const oldRDElement = this.childPatchers.get(id) as ELMPatcher
       this.getElm().replaceChild(child, oldRDElement.getElm())
       oldRDElement.removeEventListeners()
     } else if (
-      this.elmMap.has(id) &&
-      (this.elmMap.get(id) as ELMPatcher).getVNode().sel === node.sel
+      this.childPatchers.has(id) &&
+      (this.childPatchers.get(id) as ELMPatcher).getVNode().sel === node.sel
     ) {
-      const child = this.elmMap.get(id) as ELMPatcher
+      const child = this.childPatchers.get(id) as ELMPatcher
       child.patch(node)
     } else if (Number.isFinite(this.positions.gte(id))) {
-      const referenceNode = this.elmMap.get(
+      const referenceNode = this.childPatchers.get(
         this.positions.gte(id)
       ) as ELMPatcher
       this.getElm().insertBefore(child, referenceNode.getElm())
@@ -141,22 +141,22 @@ export class ELMPatcher {
       this.getElm().appendChild(child)
     }
     this.positions = this.positions.add(id)
-    this.elmMap.set(id, rd)
+    this.childPatchers.set(id, rd)
     return rd
   }
 
   private patchAt(node: VNode, id: number) {
-    const child = this.elmMap.get(id) as ELMPatcher
+    const child = this.childPatchers.get(id) as ELMPatcher
     child.patch(node)
   }
 
   private removeAt(id: number) {
-    const node = this.elmMap.get(id)
+    const node = this.childPatchers.get(id)
     if (node) {
       this.getElm().removeChild(node.getElm())
       node.removeEventListeners()
       this.positions = this.positions.remove(id)
-      this.elmMap.delete(id)
+      this.childPatchers.delete(id)
     }
   }
 
