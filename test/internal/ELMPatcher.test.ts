@@ -15,12 +15,25 @@ describe('ELMPatcher', () => {
         })
       })
       context('diff selector', () => {
-        it('should throw', () => {
+        it('should create new elm', () => {
           const elm = new ELMPatcher({sel: 'div.container'})
-          assert.throws(
-            () => elm.patch({sel: 'div.container-2'}),
-            'Element already initialized'
-          )
+          const node0 = elm.getElm()
+          elm.patch({sel: 'div.container-2'})
+          const node1 = elm.getElm()
+          const actual = elm.getElm().outerHTML
+          const expected = `<div class="container-2"></div>`
+          assert.equal(actual, expected)
+          assert.notEqual(node0, node1)
+        })
+
+        it('should dispose the old elm', () => {
+          let count = 0
+          const onClick = () => count++
+          const elm = new ELMPatcher({sel: 'div.container', on: {click: onClick}})
+          const node = elm.getElm()
+          elm.patch({sel: 'div.container-2'})
+          node.dispatchEvent(new CustomEvent('click'))
+          assert.equal(count,  0, 'Event listener was not removed')
         })
       })
     })
@@ -220,7 +233,6 @@ describe('ELMPatcher', () => {
         const expected = `<div>APPLE</div>`
         assert.equal(actual, expected)
       })
-
       it('should update internal text', () => {
         const elm = new ELMPatcher({
           sel: 'div',
@@ -233,6 +245,29 @@ describe('ELMPatcher', () => {
         const actual = elm.getElm().outerHTML
         const expected = `<div>B</div>`
         assert.equal(actual, expected)
+      })
+      it('should not recreate dom nodes', () => {
+        const rd = new ELMPatcher({
+          sel: 'ul',
+          children: [
+            {sel: 'li.__0', key: '0'},
+            {sel: 'li.__1', key: '1'},
+            {sel: 'li.__2', key: '2'},
+            {sel: 'li.__3', key: '3'}
+          ]
+        })
+        const node0 = rd.getElm().childNodes[2]
+        rd.patch({
+          sel: 'ul',
+          children: [
+            {sel: 'li.__0', key: '0'},
+            {sel: 'li.__1', key: '1'},
+            {sel: 'li.__3', key: '3'},
+            {sel: 'li.__2', key: '2'}
+          ]
+        })
+        const node1 = rd.getElm().childNodes[2]
+        assert.strictEqual(node0, node1)
       })
     })
   })

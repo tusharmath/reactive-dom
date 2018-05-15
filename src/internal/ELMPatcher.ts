@@ -121,12 +121,20 @@ export class ELMPatcher implements IPatcher {
       : new TextPatcher(node)
   }
 
+  /**
+   * Initializes the patcher with a DOM node to work with
+   * @param {AnyVNode} vNode
+   */
   private init(vNode: AnyVNode) {
     if (isVNode(vNode)) {
       const sel = vNode.sel
       if (this.vNode && this.vNode.sel === sel) return
-      if (this.elm) throw new Error('Element already initialized')
-      this.elm = createElement(sel)
+      if (this.elm) {
+        this.dispose()
+        this.elm = createElement(sel)
+      } else {
+        this.elm = createElement(sel)
+      }
     } else {
       this.elm = document.createTextNode(vNode.toString())
     }
@@ -180,8 +188,8 @@ export class ELMPatcher implements IPatcher {
   }
 
   private patchAt(node: AnyVNode, id: number) {
-    const child = this.childPatchers.get(id) as IPatcher
-    child.patch(node)
+    const child = this.childPatchers.get(id)
+    if (child) child.patch(node)
   }
 
   private removeAt(id: number) {
