@@ -34,7 +34,7 @@ function getChildrenIndexMap(children: Array<AnyVNode>): {[p: string]: number} {
 export interface IPatcher {
   patch(node: AnyVNode): void
   getElm(): Node
-  isSimilar(node: AnyVNode): boolean
+  canPatch(node: AnyVNode): boolean
   dispose(): void
 }
 
@@ -52,7 +52,7 @@ export class TextPatcher implements IPatcher {
     throw new Error('Uninitialized Patcher')
   }
 
-  isSimilar(node: AnyVNode): boolean {
+  canPatch(node: AnyVNode): boolean {
     return true
   }
 
@@ -96,11 +96,6 @@ export class ELMPatcher implements IPatcher {
     const {add, del, com} = objectDiff(curr, prev)
     del.forEach(_ => delete elm[_])
     add.concat(com).forEach(_ => (elm[_] = props[_]))
-  }
-
-  private removeEventListeners() {
-    const {on = {}} = this.vNode ? this.vNode : {}
-    this.setListeners({}, on)
   }
 
   private setListeners(
@@ -166,13 +161,11 @@ export class ELMPatcher implements IPatcher {
     const child = rd.getElm()
     const childPatcher = this.childPatchers.get(id)
 
-    if (childPatcher && childPatcher.isSimilar(node)) {
-      const oldRDElement = this.childPatchers.get(id) as ELMPatcher
-      this.getElm().replaceChild(child, oldRDElement.getElm())
-      oldRDElement.removeEventListeners()
-    } else if (childPatcher && !childPatcher.isSimilar(node)) {
-      const child = this.childPatchers.get(id) as IPatcher
-      child.patch(node)
+    if (childPatcher && childPatcher.canPatch(node)) {
+      this.getElm().replaceChild(child, childPatcher.getElm())
+      childPatcher.dispose()
+    } else if (childPatcher && !childPatcher.canPatch(node)) {
+      childPatcher.patch(node)
     } else if (Number.isFinite(this.positions.gte(id))) {
       const referenceNode = this.childPatchers.get(
         this.positions.gte(id)
@@ -232,11 +225,12 @@ export class ELMPatcher implements IPatcher {
     this.vNode = node
   }
 
-  isSimilar(node: AnyVNode): boolean {
+  canPatch(node: AnyVNode): boolean {
     return isVNode(node) && this.getVNode().sel !== node.sel
   }
 
   dispose(): void {
-    this.removeEventListeners()
+    const {on = {}} = this.vNode ? this.vNode : {}
+    this.setListeners({}, on)
   }
 }
