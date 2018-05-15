@@ -26,7 +26,6 @@ export class ELMPatcher {
   private elm?: HTMLElement
   private vNode?: VNode
 
-  private props = new Set<string>()
   private children: Array<VNode> = []
   private positions = new RDSet()
   private elmMap = new Map<number, ELMPatcher>()
@@ -64,13 +63,13 @@ export class ELMPatcher {
     }
   }
 
-  private setProps(props: RDProps) {
+  private setProps(props: RDProps, prevProps: RDProps) {
     const curr = new Set(Object.keys(props))
+    const prev = new Set(Object.keys(prevProps))
     const elm = this.getElm() as any
-    const {add, del, com} = objectDiff(curr, this.props)
+    const {add, del, com} = objectDiff(curr, prev)
     del.forEach(_ => delete elm[_])
     add.concat(com).forEach(_ => (elm[_] = props[_]))
-    this.props = curr
   }
 
   private setListeners(on: RDEventListeners) {
@@ -187,7 +186,8 @@ export class ELMPatcher {
   patch(node: VNode) {
     this.init(node)
     if (node.attrs) this.setAttrs(node.attrs)
-    if (node.props) this.setProps(node.props)
+    if (node.props)
+      this.setProps(node.props, (this.vNode && this.vNode.props) || {})
     if (node.style) this.setStyle(node.style)
     if (node.on) this.setListeners(node.on)
     else this.setListeners({})
