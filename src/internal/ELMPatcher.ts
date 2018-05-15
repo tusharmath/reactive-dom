@@ -169,7 +169,7 @@ export class ELMPatcher implements IPatcher {
     } else if (Number.isFinite(this.positions.gte(id))) {
       const referenceNode = this.childPatchers.get(
         this.positions.gte(id)
-      ) as ELMPatcher
+      ) as IPatcher
       this.getElm().insertBefore(child, referenceNode.getElm())
     } else {
       this.getElm().appendChild(child)
