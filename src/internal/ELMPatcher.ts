@@ -26,7 +26,6 @@ export class ELMPatcher {
   private elm?: HTMLElement
   private vNode?: VNode
 
-  private children: Array<VNode> = []
   private positions = new RDSet()
   private elmMap = new Map<number, ELMPatcher>()
 
@@ -102,12 +101,15 @@ export class ELMPatcher {
     this.elm = createElement(sel)
   }
 
-  private patchChildren(children: Array<VNode>) {
+  private patchChildren(
+    children: Array<VNode>,
+    previousChildren: Array<VNode>
+  ) {
     const curr = new Set(children.map(getKey))
-    const prev = new Set(this.children.map(getKey))
+    const prev = new Set(previousChildren.map(getKey))
     const {add, del, com} = objectDiff(curr, prev)
     const currentChildrenIndexMap = getChildrenIndexMap(children)
-    const prevChildrenIndexMap = getChildrenIndexMap(this.children)
+    const prevChildrenIndexMap = getChildrenIndexMap(previousChildren)
     del.forEach(_ => this.removeAt(prevChildrenIndexMap[_]))
     add.forEach(_ =>
       this.addAt(
@@ -121,7 +123,6 @@ export class ELMPatcher {
         currentChildrenIndexMap[_]
       )
     )
-    this.children = children
   }
 
   private addAt(node: VNode, id: number): ELMPatcher {
@@ -185,13 +186,17 @@ export class ELMPatcher {
 
   patch(node: VNode) {
     this.init(node)
+
+    const {style = {}, attrs = {}, props = {}, children = []} = this.vNode
+      ? this.vNode
+      : {}
+
     if (node.attrs) this.setAttrs(node.attrs)
-    if (node.props)
-      this.setProps(node.props, (this.vNode && this.vNode.props) || {})
+    if (node.props) this.setProps(node.props, props)
     if (node.style) this.setStyle(node.style)
     if (node.on) this.setListeners(node.on)
     else this.setListeners({})
-    if (node.children) this.patchChildren(node.children)
+    if (node.children) this.patchChildren(node.children, children)
     this.vNode = node
   }
 }
