@@ -8,7 +8,7 @@ import {log} from 'util'
 import {h} from '../src/HyperScriptElement'
 import {html} from './__helpers__/html'
 
-describe('HTMLElementObservable', () => {
+describe.skip('HTMLElementObservable', () => {
   describe('children', () => {
     it('should append child to parent', () => {
       const SH = createTestScheduler()

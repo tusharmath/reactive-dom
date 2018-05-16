@@ -5,11 +5,11 @@
 import {CompositeSubscription, IScheduler, ISubscription} from 'observable-air'
 import * as O from 'observable-air'
 import {LinkedListNode} from 'observable-air/src/internal/LinkedList'
-import {Patcher} from './Patcher'
 import {isObservable} from './helpers/isObservable'
 import {toNode} from './helpers/toNode'
 import {Insertable} from './Insertable'
 import {MetaObserver} from './MetaObserver'
+import {Patcher} from './Patcher'
 import {VNode} from './VNode'
 
 export class ELMContext extends CompositeSubscription {

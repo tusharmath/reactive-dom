@@ -4,7 +4,6 @@
 
 import {createElement} from './helpers/createElement'
 import {objectDiff} from './helpers/objectDiff'
-import {RDSet} from './RDSet'
 import {
   AnyVNode,
   RDAttributes,
@@ -38,7 +37,7 @@ export interface IPatcher {
   dispose(): void
 }
 
-export class TextPatcher implements IPatcher {
+class TextPatcher implements IPatcher {
   private elm?: Text
   constructor(elm: string | number) {
     this.patch(elm)
@@ -66,7 +65,7 @@ export class Patcher implements IPatcher {
   private elm?: Node
   private vNode?: VNode
 
-  private positions = new RDSet()
+  // private positions = new RDSet()
   private childPatchers = new Map<number, IPatcher>()
 
   private setAttrs(attrs: RDAttributes, prevAttrs: RDAttributes) {
@@ -142,53 +141,34 @@ export class Patcher implements IPatcher {
     const currentChildrenIndexMap = getChildrenIndexMap(children)
     const prevChildrenIndexMap = getChildrenIndexMap(previousChildren)
 
-    del.forEach(_ => this.removeAt(prevChildrenIndexMap[_]))
+    del.forEach(_ => {
+      const id = prevChildrenIndexMap[_]
+      const node = this.childPatchers.get(id)
+      if (node) {
+        this.getElm().removeChild(node.getElm())
+        node.dispose()
+        this.childPatchers.delete(id)
+      }
+    })
 
-    com.forEach(_ =>
-      this.patchAt(
-        children[currentChildrenIndexMap[_]],
-        prevChildrenIndexMap[_],
-        currentChildrenIndexMap[_]
+    com.forEach(_ => {
+      const node = children[currentChildrenIndexMap[_]]
+      const toID = currentChildrenIndexMap[_]
+      const child = this.childPatchers.get(toID)
+      if (child) child.patch(node)
+    })
+    add.forEach(key => {
+      const position = currentChildrenIndexMap[key]
+      const vNode = children[position]
+      const patcher = isVNode(vNode)
+        ? new Patcher(vNode)
+        : new TextPatcher(vNode)
+      this.childPatchers.set(position, patcher)
+      this.getElm().insertBefore(
+        patcher.getElm(),
+        this.getElm().childNodes[position] || null
       )
-    )
-    add.forEach(_ =>
-      this.addAt(
-        children[currentChildrenIndexMap[_]],
-        currentChildrenIndexMap[_]
-      )
-    )
-  }
-
-  private addAt(vNode: AnyVNode, id: number): IPatcher {
-    const patcher = isVNode(vNode)
-      ? new Patcher(vNode)
-      : new TextPatcher(vNode)
-    const child = patcher.getElm()
-    const gteID = this.positions.gte(id)
-    const gtePatcher = this.childPatchers.get(gteID)
-    if (Number.isFinite(gteID) && gtePatcher) {
-      this.getElm().insertBefore(child, gtePatcher.getElm())
-    } else {
-      this.getElm().appendChild(child)
-    }
-    this.positions = this.positions.add(id)
-    this.childPatchers.set(id, patcher)
-    return patcher
-  }
-
-  private patchAt(node: AnyVNode, fromID: number, toID: number) {
-    const child = this.childPatchers.get(toID)
-    if (child) child.patch(node)
-  }
-
-  private removeAt(id: number) {
-    const node = this.childPatchers.get(id)
-    if (node) {
-      this.getElm().removeChild(node.getElm())
-      node.dispose()
-      this.positions = this.positions.remove(id)
-      this.childPatchers.delete(id)
-    }
+    })
   }
 
   private getVNode() {
