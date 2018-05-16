@@ -112,15 +112,6 @@ export class ELMPatcher implements IPatcher {
     add.forEach(_ => this.getElm().addEventListener(_, on[_]))
   }
 
-  private getChildRDElm(node: AnyVNode, id: number): IPatcher {
-    return isVNode(node)
-      ? this.childPatchers.has(id) &&
-        (this.childPatchers.get(id) as ELMPatcher).getVNode().sel === node.sel
-        ? (this.childPatchers.get(id) as ELMPatcher)
-        : new ELMPatcher(node)
-      : new TextPatcher(node)
-  }
-
   /**
    * Initializes the patcher with a DOM node to work with
    * @param {AnyVNode} vNode
@@ -144,51 +135,49 @@ export class ELMPatcher implements IPatcher {
     children: Array<AnyVNode>,
     previousChildren: Array<AnyVNode>
   ) {
-    const curr = new Set(children.map(getKey))
-    const prev = new Set(previousChildren.map(getKey))
-    const {add, del, com} = objectDiff(curr, prev)
+    const {add, del, com} = objectDiff(
+      new Set(children.map(getKey)),
+      new Set(previousChildren.map(getKey))
+    )
     const currentChildrenIndexMap = getChildrenIndexMap(children)
     const prevChildrenIndexMap = getChildrenIndexMap(previousChildren)
+
     del.forEach(_ => this.removeAt(prevChildrenIndexMap[_]))
+
+    com.forEach(_ =>
+      this.patchAt(
+        children[currentChildrenIndexMap[_]],
+        prevChildrenIndexMap[_],
+        currentChildrenIndexMap[_]
+      )
+    )
     add.forEach(_ =>
       this.addAt(
         children[currentChildrenIndexMap[_]],
         currentChildrenIndexMap[_]
       )
     )
-    com.forEach(_ =>
-      this.patchAt(
-        children[currentChildrenIndexMap[_]],
-        currentChildrenIndexMap[_]
-      )
-    )
   }
 
-  private addAt(node: AnyVNode, id: number): IPatcher {
-    const rd = this.getChildRDElm(node, id)
-    const child = rd.getElm()
-    const childPatcher = this.childPatchers.get(id)
-
-    if (childPatcher && childPatcher.canPatch(node)) {
-      this.getElm().replaceChild(child, childPatcher.getElm())
-      childPatcher.dispose()
-    } else if (childPatcher && !childPatcher.canPatch(node)) {
-      childPatcher.patch(node)
-    } else if (Number.isFinite(this.positions.gte(id))) {
-      const referenceNode = this.childPatchers.get(
-        this.positions.gte(id)
-      ) as IPatcher
-      this.getElm().insertBefore(child, referenceNode.getElm())
+  private addAt(vNode: AnyVNode, id: number): IPatcher {
+    const patcher = isVNode(vNode)
+      ? new ELMPatcher(vNode)
+      : new TextPatcher(vNode)
+    const child = patcher.getElm()
+    const gteID = this.positions.gte(id)
+    const gtePatcher = this.childPatchers.get(gteID)
+    if (Number.isFinite(gteID) && gtePatcher) {
+      this.getElm().insertBefore(child, gtePatcher.getElm())
     } else {
       this.getElm().appendChild(child)
     }
     this.positions = this.positions.add(id)
-    this.childPatchers.set(id, rd)
-    return rd
+    this.childPatchers.set(id, patcher)
+    return patcher
   }
 
-  private patchAt(node: AnyVNode, id: number) {
-    const child = this.childPatchers.get(id)
+  private patchAt(node: AnyVNode, fromID: number, toID: number) {
+    const child = this.childPatchers.get(toID)
     if (child) child.patch(node)
   }
 
