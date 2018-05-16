@@ -5,7 +5,7 @@
 import {CompositeSubscription, IScheduler, ISubscription} from 'observable-air'
 import * as O from 'observable-air'
 import {LinkedListNode} from 'observable-air/src/internal/LinkedList'
-import {ELMPatcher} from './ELMPatcher'
+import {Patcher} from './Patcher'
 import {isObservable} from './helpers/isObservable'
 import {toNode} from './helpers/toNode'
 import {Insertable} from './Insertable'
@@ -14,7 +14,7 @@ import {VNode} from './VNode'
 
 export class ELMContext extends CompositeSubscription {
   private dispatched = false
-  private readonly elm = new ELMPatcher()
+  private readonly elm = new Patcher()
   constructor(
     private sel: string,
     private sink: O.IObserver<Insertable>,

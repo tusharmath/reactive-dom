@@ -62,7 +62,7 @@ export class TextPatcher implements IPatcher {
 /**
  * Provides low-level DOM APIs to update/mutate real dom nodes.
  */
-export class ELMPatcher implements IPatcher {
+export class Patcher implements IPatcher {
   private elm?: Node
   private vNode?: VNode
 
@@ -161,7 +161,7 @@ export class ELMPatcher implements IPatcher {
 
   private addAt(vNode: AnyVNode, id: number): IPatcher {
     const patcher = isVNode(vNode)
-      ? new ELMPatcher(vNode)
+      ? new Patcher(vNode)
       : new TextPatcher(vNode)
     const child = patcher.getElm()
     const gteID = this.positions.gte(id)

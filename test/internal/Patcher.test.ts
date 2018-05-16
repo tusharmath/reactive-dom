@@ -3,20 +3,20 @@
  */
 
 import {assert} from 'chai'
-import {ELMPatcher} from '../../src/internal/ELMPatcher'
+import {Patcher} from '../../src/internal/Patcher'
 
-describe('ELMPatcher', () => {
+describe('Patcher', () => {
   describe('patch', () => {
     context('already initialized', () => {
       context('and same selector', () => {
         it('should not throw', () => {
-          const elm = new ELMPatcher({sel: 'div.whoopy'})
+          const elm = new Patcher({sel: 'div.whoopy'})
           assert.doesNotThrow(() => elm.patch({sel: 'div.whoopy'}))
         })
       })
       context('diff selector', () => {
         it('should create new elm', () => {
-          const elm = new ELMPatcher({sel: 'div.container'})
+          const elm = new Patcher({sel: 'div.container'})
           const node0 = elm.getElm()
           elm.patch({sel: 'div.container-2'})
           const node1 = elm.getElm()
@@ -29,7 +29,7 @@ describe('ELMPatcher', () => {
         it('should dispose the old elm', () => {
           let count = 0
           const onClick = () => count++
-          const elm = new ELMPatcher({
+          const elm = new Patcher({
             sel: 'div.container',
             on: {click: onClick}
           })
@@ -42,7 +42,7 @@ describe('ELMPatcher', () => {
     })
     context('index is same', () => {
       it('should apply the diff', () => {
-        const rd = new ELMPatcher({sel: 'ul'})
+        const rd = new Patcher({sel: 'ul'})
         rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'red'}}]})
         rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'green'}}]})
         const actual = rd.getElm().outerHTML
@@ -51,7 +51,7 @@ describe('ELMPatcher', () => {
       })
 
       it('should not create a new element', () => {
-        const rd = new ELMPatcher({sel: 'ul'})
+        const rd = new Patcher({sel: 'ul'})
         rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'red'}}]})
         const node0 = rd.getElm().childNodes[0]
         rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'green'}}]})
@@ -61,7 +61,7 @@ describe('ELMPatcher', () => {
 
       context('selector is diff', () => {
         it('should create a new child', () => {
-          const rd = new ELMPatcher({sel: 'ul'})
+          const rd = new Patcher({sel: 'ul'})
           rd.patch({sel: 'ul', children: [{sel: 'li.aaa'}]})
           rd.patch({sel: 'ul', children: [{sel: 'li.bbb'}]})
           const actual = rd.getElm().outerHTML
@@ -71,7 +71,7 @@ describe('ELMPatcher', () => {
 
         it('should remove event listeners', () => {
           let count = 0
-          const rd = new ELMPatcher({sel: 'ul'})
+          const rd = new Patcher({sel: 'ul'})
           const onClick = () => count++
           rd.patch({
             sel: 'ul',
@@ -88,7 +88,7 @@ describe('ELMPatcher', () => {
       it('should add event listeners', () => {
         let count = 0
         const onClick = () => count++
-        const elm = new ELMPatcher({
+        const elm = new Patcher({
           sel: 'div.container',
           on: {
             click: onClick
@@ -100,7 +100,7 @@ describe('ELMPatcher', () => {
       it('should remove listeners from the removed node', () => {
         let count = 0
         const onClick = () => count++
-        const rd = new ELMPatcher({sel: 'ul'})
+        const rd = new Patcher({sel: 'ul'})
         rd.patch({
           sel: 'ul',
           children: [
@@ -116,7 +116,7 @@ describe('ELMPatcher', () => {
     })
     describe('style', () => {
       it('should update styles', () => {
-        const elm = new ELMPatcher({
+        const elm = new Patcher({
           sel: 'div.container',
           style: {
             color: 'red'
@@ -131,7 +131,7 @@ describe('ELMPatcher', () => {
 
       context('style key is removed', () => {
         it('should remove the styles from dom elm', () => {
-          const elm = new ELMPatcher({sel: 'div.whoopy', style: {color: 'red'}})
+          const elm = new Patcher({sel: 'div.whoopy', style: {color: 'red'}})
           elm.patch({sel: 'div.whoopy'})
           const actual = elm.getElm().outerHTML
           const expected = `<div class="whoopy" style=""></div>`
@@ -141,7 +141,7 @@ describe('ELMPatcher', () => {
     })
     describe('attrs', () => {
       it('should update attributes', () => {
-        const elm = new ELMPatcher({
+        const elm = new Patcher({
           sel: 'div.container',
           attrs: {
             data: 'carbon-di-oxide'
@@ -156,7 +156,7 @@ describe('ELMPatcher', () => {
 
       context('attrs key is removed', () => {
         it('should remove the attrs from dom elm', () => {
-          const elm = new ELMPatcher({sel: 'a', attrs: {href: '/a'}})
+          const elm = new Patcher({sel: 'a', attrs: {href: '/a'}})
           elm.patch({sel: 'a'})
           const actual = elm.getElm().outerHTML
           const expected = `<a></a>`
@@ -166,7 +166,7 @@ describe('ELMPatcher', () => {
     })
     describe('props', () => {
       it('should update props', () => {
-        const elm = new ELMPatcher({
+        const elm = new Patcher({
           sel: 'div.container',
           props: {
             id: 'carbon-di-oxide'
@@ -177,7 +177,7 @@ describe('ELMPatcher', () => {
 
       context('props key is removed', () => {
         it('should remove the props from dom elm', () => {
-          const elm: any = new ELMPatcher({sel: 'h1', props: {asd: 'ALPHA'}})
+          const elm: any = new Patcher({sel: 'h1', props: {asd: 'ALPHA'}})
           assert.ok(elm.getElm().asd)
           elm.patch({sel: 'h1'})
           const actual = elm.getElm().asd
@@ -187,7 +187,7 @@ describe('ELMPatcher', () => {
     })
     describe('children', () => {
       it('should update children', () => {
-        const elm = new ELMPatcher({
+        const elm = new Patcher({
           sel: 'ul.nav',
           children: [{sel: 'li'}, {sel: 'li.active'}, {sel: 'li'}]
         })
@@ -196,7 +196,7 @@ describe('ELMPatcher', () => {
         assert.equal(actual, expected)
       })
       it('should append child', () => {
-        const rd = new ELMPatcher({sel: 'ul'})
+        const rd = new Patcher({sel: 'ul'})
         rd.patch({sel: 'ul', children: [{sel: 'li.__0', key: '0'}]})
         rd.patch({
           sel: 'ul',
@@ -207,7 +207,7 @@ describe('ELMPatcher', () => {
         assert.equal(actual, expected)
       })
       it('should maintain order', () => {
-        const rd = new ELMPatcher({sel: 'ul'})
+        const rd = new Patcher({sel: 'ul'})
         rd.patch({sel: 'ul', children: [{sel: 'li.__7'}]})
         rd.patch({sel: 'ul', children: [{sel: 'li.__1'}, {sel: 'li.__7'}]})
         const actual = rd.getElm().outerHTML
@@ -215,7 +215,7 @@ describe('ELMPatcher', () => {
         assert.equal(actual, expected)
       })
       it('should remove dom node', () => {
-        const rd = new ELMPatcher({sel: 'ul'})
+        const rd = new Patcher({sel: 'ul'})
         rd.patch({sel: 'ul', children: [{sel: 'li.__7'}]})
         rd.patch({sel: 'ul', children: [{sel: 'li.__1'}, {sel: 'li.__7'}]})
         rd.patch({
@@ -228,7 +228,7 @@ describe('ELMPatcher', () => {
         assert.equal(actual, expected)
       })
       it('should set internal text', () => {
-        const elm = new ELMPatcher({
+        const elm = new Patcher({
           sel: 'div',
           children: ['APPLE']
         })
@@ -237,7 +237,7 @@ describe('ELMPatcher', () => {
         assert.equal(actual, expected)
       })
       it('should update internal text', () => {
-        const elm = new ELMPatcher({
+        const elm = new Patcher({
           sel: 'div',
           children: ['A']
         })
@@ -252,7 +252,7 @@ describe('ELMPatcher', () => {
 
       context('elements swapped', () => {
         it.skip('should not recreate dom nodes', () => {
-          const rd = new ELMPatcher({
+          const rd = new Patcher({
             sel: 'ul',
             children: [
               {sel: 'li.__0', key: '0'},
@@ -280,7 +280,7 @@ describe('ELMPatcher', () => {
 
       context('element removed', () => {
         it('should not recreate dom nodes', () => {
-          const rd = new ELMPatcher({
+          const rd = new Patcher({
             sel: 'ul',
             children: [
               {sel: 'li.__0', key: '0'},
@@ -300,7 +300,7 @@ describe('ELMPatcher', () => {
       })
       context('element added', () => {
         it('should insert in between', () => {
-          const rd = new ELMPatcher({
+          const rd = new Patcher({
             sel: 'ul',
             children: [{sel: 'li.__0', key: '0'}, {sel: 'li.__2', key: '2'}]
           })
@@ -318,7 +318,7 @@ describe('ELMPatcher', () => {
         })
 
         it('should not update existing node', () => {
-          const rd = new ELMPatcher({
+          const rd = new Patcher({
             sel: 'ul',
             children: [{sel: 'li.__0', key: '0'}, {sel: 'li.__2', key: '2'}]
           })
