@@ -133,6 +133,7 @@ export class Patcher implements IPatcher {
     children: Array<AnyVNode>,
     previousChildren: Array<AnyVNode>
   ) {
+
     const {add, del, com} = objectDiff(
       new Set(children.map(getKey)),
       new Set(previousChildren.map(getKey))

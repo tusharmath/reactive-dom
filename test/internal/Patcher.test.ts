@@ -40,50 +40,6 @@ describe('Patcher', () => {
         })
       })
     })
-    context('index is same', () => {
-      it('should apply the diff', () => {
-        const rd = new Patcher({sel: 'ul'})
-        rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'red'}}]})
-        rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'green'}}]})
-        const actual = rd.getElm().outerHTML
-        const expected = `<ul><li style="color: green;"></li></ul>`
-        assert.equal(actual, expected)
-      })
-
-      it('should not create a new element', () => {
-        const rd = new Patcher({sel: 'ul'})
-        rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'red'}}]})
-        const node0 = rd.getElm().childNodes[0]
-        rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'green'}}]})
-        const node1 = rd.getElm().childNodes[0]
-        assert.strictEqual(node0, node1)
-      })
-
-      context('selector is diff', () => {
-        it('should create a new child', () => {
-          const rd = new Patcher({sel: 'ul'})
-          rd.patch({sel: 'ul', children: [{sel: 'li.aaa'}]})
-          rd.patch({sel: 'ul', children: [{sel: 'li.bbb'}]})
-          const actual = rd.getElm().outerHTML
-          const expected = `<ul><li class="bbb"></li></ul>`
-          assert.equal(actual, expected)
-        })
-
-        it('should remove event listeners', () => {
-          let count = 0
-          const rd = new Patcher({sel: 'ul'})
-          const onClick = () => count++
-          rd.patch({
-            sel: 'ul',
-            children: [{sel: 'li.aaa', on: {click: onClick}}]
-          })
-          const node = rd.getElm().childNodes[0]
-          rd.patch({sel: 'ul', children: [{sel: 'li.aaa'}, {sel: 'li.bbb'}]})
-          node.dispatchEvent(new Event('click'))
-          assert.equal(count, 0)
-        })
-      })
-    })
     describe('on', () => {
       it('should add event listeners', () => {
         let count = 0
@@ -330,6 +286,50 @@ describe('Patcher', () => {
           const [node10, node11, node12] = rd.getElm().childNodes
           assert.strictEqual(node00, node10)
           assert.strictEqual(node01, node12)
+        })
+      })
+      context('index is same', () => {
+        it('should apply the diff', () => {
+          const rd = new Patcher({sel: 'ul'})
+          rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'red'}}]})
+          rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'green'}}]})
+          const actual = rd.getElm().outerHTML
+          const expected = `<ul><li style="color: green;"></li></ul>`
+          assert.equal(actual, expected)
+        })
+
+        it('should not create a new element', () => {
+          const rd = new Patcher({sel: 'ul'})
+          rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'red'}}]})
+          const node0 = rd.getElm().childNodes[0]
+          rd.patch({sel: 'ul', children: [{sel: 'li', style: {color: 'green'}}]})
+          const node1 = rd.getElm().childNodes[0]
+          assert.strictEqual(node0, node1)
+        })
+
+        context('selector is diff', () => {
+          it('should create a new child', () => {
+            const rd = new Patcher({sel: 'ul'})
+            rd.patch({sel: 'ul', children: [{sel: 'li.aaa'}]})
+            rd.patch({sel: 'ul', children: [{sel: 'li.bbb'}]})
+            const actual = rd.getElm().outerHTML
+            const expected = `<ul><li class="bbb"></li></ul>`
+            assert.equal(actual, expected)
+          })
+
+          it('should remove event listeners', () => {
+            let count = 0
+            const rd = new Patcher({sel: 'ul'})
+            const onClick = () => count++
+            rd.patch({
+              sel: 'ul',
+              children: [{sel: 'li.aaa', on: {click: onClick}}]
+            })
+            const node = rd.getElm().childNodes[0]
+            rd.patch({sel: 'ul', children: [{sel: 'li.aaa'}, {sel: 'li.bbb'}]})
+            node.dispatchEvent(new Event('click'))
+            assert.equal(count, 0)
+          })
         })
       })
     })
