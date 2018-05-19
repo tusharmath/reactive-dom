@@ -65,7 +65,6 @@ export class Patcher implements IPatcher {
   private elm?: Node
   private vNode?: VNode
 
-  // private positions = new RDSet()
   private childPatchers = new Map<number, IPatcher>()
 
   private setAttrs(attrs: RDAttributes, prevAttrs: RDAttributes) {

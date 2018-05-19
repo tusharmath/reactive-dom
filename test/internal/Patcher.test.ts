@@ -260,7 +260,6 @@ describe('Patcher', () => {
               {sel: 'li.__2', key: '2'}
             ]
           })
-          // const node0 = rd.getElm().childNodes[2]
           rd.patch({
             sel: 'ul',
             children: [
@@ -271,10 +270,7 @@ describe('Patcher', () => {
           })
           const actual = rd.getElm().outerHTML
           const expected = `<ul><li class="__2"></li><li class="__1"></li><li class="__0"></li></ul>`
-          // console.log(actual)
           assert.equal(actual, expected)
-          // const node1 = rd.getElm().childNodes[3]
-          // assert.strictEqual(node0, node1)
         })
       })
 
